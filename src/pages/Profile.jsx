@@ -74,7 +74,7 @@ export default function Profile() {
 
         <div className="flex gap-2 w-full">
           <button
-            onClick={() => navigate("/settings")}
+            onClick={() => navigate("/edit-profile")}
             className="flex-1 py-2 rounded-full border border-border text-sm font-semibold text-foreground"
           >
             Edit Profile

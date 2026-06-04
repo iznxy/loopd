@@ -26,6 +26,7 @@ import ChatWindow from '@/pages/ChatWindow';
 import Notifications from '@/pages/Notifications';
 import CreatorProfile from '@/pages/CreatorProfile';
 import Settings from '@/pages/Settings';
+import EditProfile from '@/pages/EditProfile';
 import Analytics from '@/pages/Analytics';
 import Privacy from '@/pages/Privacy';
 import Help from '@/pages/Help';
@@ -74,6 +75,7 @@ const AuthenticatedApp = () => {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/creator/:username" element={<CreatorProfile />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/help" element={<Help />} />

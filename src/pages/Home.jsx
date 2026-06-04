@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Heart, MessageCircle, Share2, Bell, Repeat2, DollarSign } from "lucide-react";
+import { Heart, MessageCircle, Share2, Bell, Repeat2 } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { fmtN, timeAgo, getAvColor, getInitials } from "@/lib/utils";
+import CommentsPanel from "@/components/CommentsPanel";
 
 const BG_MAP = {
   bg1: "linear-gradient(135deg,#667eea,#764ba2)",
@@ -21,10 +22,17 @@ export default function Home() {
   const [likedIds, setLikedIds] = useState(new Set());
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [commentPost, setCommentPost] = useState(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const containerRef = useRef(null);
 
   useEffect(() => {
-    base44.auth.me().then(u => setCurrentUser(u)).catch(() => {});
+    base44.auth.me().then(u => {
+      setCurrentUser(u);
+      if (u) {
+        base44.entities.Notification.filter({ user_id: u.id, is_read: false }).then(r => setUnreadCount(r.length));
+      }
+    }).catch(() => {});
     base44.entities.Post.list("-created_date", 30)
       .then(data => { setPosts(data); setLoading(false); })
       .catch(() => setLoading(false));
@@ -60,22 +68,53 @@ export default function Home() {
         <span className="text-xl font-bold font-display" style={{ color: accentColor }}>Loopd</span>
         <button onClick={() => navigate("/notifications")} className="relative p-1">
           <Bell size={22} className="text-foreground" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[9px] font-bold text-white flex items-center justify-center" style={{ background: accentColor }}>
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
         </button>
       </div>
+
+      {/* Comments panel */}
+      {commentPost && (
+        <CommentsPanel
+          post={commentPost}
+          currentUser={currentUser}
+          onClose={() => setCommentPost(null)}
+        />
+      )}
 
       {/* Feed */}
       <div ref={containerRef} className="flex-1 overflow-y-auto hide-scrollbar snap-y snap-mandatory">
         {posts.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center gap-4 p-8 text-center">
-            <div className="text-5xl">🎬</div>
-            <div className="text-lg font-bold text-foreground">No loops yet</div>
-            <p className="text-sm text-muted-foreground">Be the first to post a loop!</p>
+          <div className="h-full flex flex-col items-center justify-center gap-6 p-8 text-center">
+            <div className="text-6xl">🎬</div>
+            <div>
+              <div className="text-xl font-bold text-foreground mb-1">Welcome to Loopd!</div>
+              <p className="text-sm text-muted-foreground">Share 6-second moments with the world.</p>
+            </div>
+            <div className="w-full max-w-xs space-y-3">
+              {[
+                { icon: "🎥", text: "Record a 6-second loop" },
+                { icon: "❤️", text: "Like & comment on loops" },
+                { icon: "💰", text: "Earn tips from fans" },
+              ].map(s => (
+                <div key={s.text} className="flex items-center gap-3 bg-card border border-border rounded-xl px-4 py-3">
+                  <span className="text-xl">{s.icon}</span>
+                  <span className="text-sm text-foreground">{s.text}</span>
+                </div>
+              ))}
+            </div>
             <button
               onClick={() => navigate("/record")}
-              className="px-6 py-3 rounded-full text-white font-bold text-sm"
+              className="px-8 py-3.5 rounded-full text-white font-bold text-sm shadow-lg"
               style={{ background: accentColor }}
             >
-              Create Loop
+              🎬 Create Your First Loop
+            </button>
+            <button onClick={() => navigate("/explore")} className="text-sm font-semibold" style={{ color: accentColor }}>
+              Explore Loops →
             </button>
           </div>
         ) : (
@@ -86,6 +125,7 @@ export default function Home() {
               liked={likedIds.has(post.id)}
               onLike={() => toggleLike(post)}
               onProfile={() => navigate(`/creator/${post.username}`)}
+              onComment={() => setCommentPost(post)}
               accentColor={accentColor}
             />
           ))
@@ -95,7 +135,7 @@ export default function Home() {
   );
 }
 
-function PostCard({ post, liked, onLike, onProfile, accentColor }) {
+function PostCard({ post, liked, onLike, onProfile, onComment, accentColor }) {
   const avColor = getAvColor(post.username);
   const bgStyle = post.bg_class ? { background: BG_MAP[post.bg_class] || BG_MAP.bg1 } : { background: BG_MAP.bg1 };
 
@@ -140,9 +180,9 @@ function PostCard({ post, liked, onLike, onProfile, accentColor }) {
       {/* Right actions */}
       <div className="absolute right-3 bottom-24 flex flex-col items-center gap-5">
         <ActionBtn icon={<Heart size={26} fill={liked ? accentColor : "none"} color={liked ? accentColor : "#fff"} />} label={fmtN(post.likes_count || 0)} onClick={onLike} />
-        <ActionBtn icon={<MessageCircle size={26} color="#fff" />} label={fmtN(post.comments_count || 0)} />
+        <ActionBtn icon={<MessageCircle size={26} color="#fff" />} label={fmtN(post.comments_count || 0)} onClick={onComment} />
         <ActionBtn icon={<Repeat2 size={26} color="#fff" />} label={fmtN(post.reloops_count || 0)} />
-        <ActionBtn icon={<Share2 size={26} color="#fff" />} label="Share" />
+        <ActionBtn icon={<Share2 size={26} color="#fff" />} label="Share" onClick={() => navigator.share?.({ url: window.location.href, title: post.caption || "Check this loop!" }).catch(() => {})} />
       </div>
     </div>
   );
