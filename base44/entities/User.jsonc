@@ -1,0 +1,56 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "user"
+      ],
+      "default": "user"
+    },
+    "username": {
+      "type": "string"
+    },
+    "bio": {
+      "type": "string"
+    },
+    "avatar_url": {
+      "type": "string"
+    },
+    "theme": {
+      "type": "string",
+      "default": "default"
+    },
+    "dark_mode": {
+      "type": "boolean",
+      "default": false
+    },
+    "age_verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "earnings": {
+      "type": "number",
+      "default": 0
+    },
+    "followers_count": {
+      "type": "number",
+      "default": 0
+    },
+    "following_count": {
+      "type": "number",
+      "default": 0
+    },
+    "loops_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "username",
+    "bio",
+    "avatar_url"
+  ]
+}

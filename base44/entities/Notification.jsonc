@@ -1,0 +1,40 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "from_user_id": {
+      "type": "string"
+    },
+    "from_username": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "like",
+        "comment",
+        "follow",
+        "reloop",
+        "tip",
+        "mention"
+      ]
+    },
+    "post_id": {
+      "type": "string"
+    },
+    "text": {
+      "type": "string"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "user_id",
+    "type"
+  ]
+}

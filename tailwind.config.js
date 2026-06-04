@@ -92,4 +92,5 @@ module.exports = {
   	}
   },
   plugins: [require("tailwindcss-animate")],
+  safelist: ["bg1","bg2","bg3","bg4","bg5","bg6"],
 }

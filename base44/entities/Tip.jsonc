@@ -1,0 +1,29 @@
+{
+  "name": "Tip",
+  "type": "object",
+  "properties": {
+    "from_user_id": {
+      "type": "string"
+    },
+    "from_username": {
+      "type": "string"
+    },
+    "to_user_id": {
+      "type": "string"
+    },
+    "to_username": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "label": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "from_user_id",
+    "to_user_id",
+    "amount"
+  ]
+}

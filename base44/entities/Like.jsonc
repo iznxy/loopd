@@ -1,0 +1,19 @@
+{
+  "name": "Like",
+  "type": "object",
+  "properties": {
+    "post_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "username": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "post_id",
+    "user_id"
+  ]
+}
