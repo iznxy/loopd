@@ -36,7 +36,7 @@ export default function Messages() {
   return (
     <div className="flex flex-col h-screen bg-background">
       <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b border-border bg-card">
-        <button onClick={() => navigate(-1)}><ChevronLeft size={22} className="text-foreground" /></button>
+        <button onClick={() => navigate("/")}><ChevronLeft size={22} className="text-foreground" /></button>
         <span className="text-base font-bold text-foreground">Messages</span>
         <button className="p-1"><Edit size={20} className="text-foreground" /></button>
       </div>

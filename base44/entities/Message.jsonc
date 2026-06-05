@@ -17,6 +17,17 @@
     "text": {
       "type": "string"
     },
+    "audio_url": {
+      "type": "string"
+    },
+    "message_type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "voice"
+      ],
+      "default": "text"
+    },
     "is_read": {
       "type": "boolean",
       "default": false

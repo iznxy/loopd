@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Heart, MessageCircle, Share2, Bell, Repeat2, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { useTheme } from "@/lib/ThemeContext";
 import { fmtN, getAvColor, getInitials } from "@/lib/utils";
 import CommentsPanel from "@/components/CommentsPanel";
@@ -64,7 +65,7 @@ export default function Home() {
     if (navigator.share) {
       navigator.share({ title: post.caption || "Check this loop!", url }).catch(() => {});
     } else {
-      navigator.clipboard.writeText(url);
+      navigator.clipboard.writeText(url).then(() => toast.success("Link copied!")).catch(() => toast.error("Could not copy link"));
     }
   }
 
