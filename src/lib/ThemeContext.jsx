@@ -10,25 +10,38 @@ const THEME_ACCENTS = {
 
 const ThemeContext = createContext();
 
+function applyDarkMode(dark) {
+  const root = document.documentElement;
+  if (dark) {
+    root.classList.add("dark");
+    root.style.colorScheme = "dark";
+  } else {
+    root.classList.remove("dark");
+    root.style.colorScheme = "light";
+  }
+}
+
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(() => localStorage.getItem("loopd_theme") || "default");
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("loopd_dark") === "true");
+  const [theme, setThemeState] = useState(() => localStorage.getItem("loopd_theme") || "default");
+  const [darkMode, setDarkModeState] = useState(() => {
+    const stored = localStorage.getItem("loopd_dark");
+    const dark = stored === "true";
+    // Apply immediately before first render to avoid flash
+    applyDarkMode(dark);
+    return dark;
+  });
 
-  useEffect(() => {
-    const root = document.documentElement;
-    if (darkMode) {
-      root.classList.add("dark");
-      root.style.colorScheme = "dark";
-    } else {
-      root.classList.remove("dark");
-      root.style.colorScheme = "light";
-    }
-    localStorage.setItem("loopd_dark", String(darkMode));
-  }, [darkMode]);
+  function setDarkMode(val) {
+    const dark = typeof val === "function" ? val(darkMode) : val;
+    applyDarkMode(dark);
+    localStorage.setItem("loopd_dark", String(dark));
+    setDarkModeState(dark);
+  }
 
-  useEffect(() => {
-    localStorage.setItem("loopd_theme", theme);
-  }, [theme]);
+  function setTheme(val) {
+    localStorage.setItem("loopd_theme", val);
+    setThemeState(val);
+  }
 
   const accentColor = THEME_ACCENTS[theme] || "#00c896";
 
