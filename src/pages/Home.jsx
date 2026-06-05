@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Heart, MessageCircle, Share2, Bell, Repeat2 } from "lucide-react";
+import { Heart, MessageCircle, Share2, Bell, Repeat2, RefreshCw } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
-import { fmtN, timeAgo, getAvColor, getInitials } from "@/lib/utils";
+import { fmtN, getAvColor, getInitials } from "@/lib/utils";
 import CommentsPanel from "@/components/CommentsPanel";
 
 const BG_MAP = {
@@ -20,6 +20,7 @@ export default function Home() {
   const { accentColor } = useTheme();
   const [posts, setPosts] = useState([]);
   const [likedIds, setLikedIds] = useState(new Set());
+  const [reloopedIds, setReloopedIds] = useState(new Set());
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [commentPost, setCommentPost] = useState(null);
@@ -41,16 +42,37 @@ export default function Home() {
   async function toggleLike(post) {
     if (!currentUser) return;
     const liked = likedIds.has(post.id);
-    setLikedIds(prev => {
-      const next = new Set(prev);
-      liked ? next.delete(post.id) : next.add(post.id);
-      return next;
-    });
+    setLikedIds(prev => { const next = new Set(prev); liked ? next.delete(post.id) : next.add(post.id); return next; });
     setPosts(prev => prev.map(p => p.id === post.id ? { ...p, likes_count: (p.likes_count || 0) + (liked ? -1 : 1) } : p));
     if (!liked) {
       await base44.entities.Like.create({ post_id: post.id, user_id: currentUser.id, username: currentUser.email?.split("@")[0] });
       await base44.entities.Post.update(post.id, { likes_count: (post.likes_count || 0) + 1 });
     }
+  }
+
+  async function toggleReloop(post) {
+    if (!currentUser) return;
+    const relooped = reloopedIds.has(post.id);
+    setReloopedIds(prev => { const next = new Set(prev); relooped ? next.delete(post.id) : next.add(post.id); return next; });
+    const delta = relooped ? -1 : 1;
+    setPosts(prev => prev.map(p => p.id === post.id ? { ...p, reloops_count: Math.max(0, (p.reloops_count || 0) + delta) } : p));
+    await base44.entities.Post.update(post.id, { reloops_count: Math.max(0, (post.reloops_count || 0) + delta) });
+  }
+
+  function sharePost(post) {
+    const url = window.location.origin + `/?post=${post.id}`;
+    if (navigator.share) {
+      navigator.share({ title: post.caption || "Check this loop!", url }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(url);
+    }
+  }
+
+  function reloadFeed() {
+    setLoading(true);
+    base44.entities.Post.list("-created_date", 30)
+      .then(data => { setPosts(data); setLoading(false); })
+      .catch(() => setLoading(false));
   }
 
   if (loading) {
@@ -65,7 +87,10 @@ export default function Home() {
     <div className="h-full flex flex-col bg-background overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b border-border bg-card">
-        <span className="text-xl font-bold font-display" style={{ color: accentColor }}>Loopd</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xl font-bold font-display" style={{ color: accentColor }}>Loopd</span>
+          <button onClick={reloadFeed} className="p-1"><RefreshCw size={16} className="text-muted-foreground" /></button>
+        </div>
         <button onClick={() => navigate("/notifications")} className="relative p-1">
           <Bell size={22} className="text-foreground" />
           {unreadCount > 0 && (
@@ -123,7 +148,10 @@ export default function Home() {
               key={post.id}
               post={post}
               liked={likedIds.has(post.id)}
+              relooped={reloopedIds.has(post.id)}
               onLike={() => toggleLike(post)}
+              onReloop={() => toggleReloop(post)}
+              onShare={() => sharePost(post)}
               onProfile={() => navigate(`/creator/${post.username}`)}
               onComment={() => setCommentPost(post)}
               accentColor={accentColor}
@@ -135,7 +163,7 @@ export default function Home() {
   );
 }
 
-function PostCard({ post, liked, onLike, onProfile, onComment, accentColor }) {
+function PostCard({ post, liked, relooped, onLike, onReloop, onShare, onProfile, onComment, accentColor }) {
   const avColor = getAvColor(post.username);
   const bgStyle = post.bg_class ? { background: BG_MAP[post.bg_class] || BG_MAP.bg1 } : { background: BG_MAP.bg1 };
 
@@ -181,8 +209,8 @@ function PostCard({ post, liked, onLike, onProfile, onComment, accentColor }) {
       <div className="absolute right-3 bottom-24 flex flex-col items-center gap-5">
         <ActionBtn icon={<Heart size={26} fill={liked ? accentColor : "none"} color={liked ? accentColor : "#fff"} />} label={fmtN(post.likes_count || 0)} onClick={onLike} />
         <ActionBtn icon={<MessageCircle size={26} color="#fff" />} label={fmtN(post.comments_count || 0)} onClick={onComment} />
-        <ActionBtn icon={<Repeat2 size={26} color="#fff" />} label={fmtN(post.reloops_count || 0)} />
-        <ActionBtn icon={<Share2 size={26} color="#fff" />} label="Share" onClick={() => navigator.share?.({ url: window.location.href, title: post.caption || "Check this loop!" }).catch(() => {})} />
+        <ActionBtn icon={<Repeat2 size={26} fill={relooped ? accentColor : "none"} color={relooped ? accentColor : "#fff"} />} label={fmtN(post.reloops_count || 0)} onClick={onReloop} />
+        <ActionBtn icon={<Share2 size={26} color="#fff" />} label="Share" onClick={onShare} />
       </div>
     </div>
   );

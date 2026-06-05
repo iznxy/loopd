@@ -35,6 +35,15 @@
     "thumbnail_url": {
       "type": "string"
     },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "public",
+        "friends",
+        "private"
+      ],
+      "default": "public"
+    },
     "is_adult": {
       "type": "boolean",
       "default": false

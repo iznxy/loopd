@@ -25,6 +25,7 @@ export default function Post() {
   const [bgClass, setBgClass] = useState("bg1");
   const [isAdult, setIsAdult] = useState(false);
   const [allowComments, setAllowComments] = useState(true);
+  const [visibility, setVisibility] = useState("public");
   const [loading, setLoading] = useState(false);
 
   async function publish() {
@@ -42,6 +43,7 @@ export default function Post() {
       video_url: videoUrl,
       is_adult: isAdult,
       allow_comments: allowComments,
+      visibility,
       is_draft: false,
       likes_count: 0,
       views_count: 0,
@@ -121,6 +123,29 @@ export default function Post() {
             </div>
           </div>
         )}
+
+        {/* Visibility */}
+        <div>
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide block mb-1.5">Who can see this?</label>
+          <div className="flex gap-2">
+            {[
+              { v: "public", label: "🌍 Public" },
+              { v: "friends", label: "👥 Friends" },
+              { v: "private", label: "🔒 Private" },
+            ].map(opt => (
+              <button
+                key={opt.v}
+                onClick={() => setVisibility(opt.v)}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold border-2 transition-all"
+                style={{
+                  borderColor: visibility === opt.v ? accentColor : "var(--border)",
+                  background: visibility === opt.v ? accentColor + "15" : "var(--card)",
+                  color: visibility === opt.v ? accentColor : "var(--foreground)",
+                }}
+              >{opt.label}</button>
+            ))}
+          </div>
+        </div>
 
         {/* Toggles */}
         <div className="bg-card border border-border rounded-xl overflow-hidden">

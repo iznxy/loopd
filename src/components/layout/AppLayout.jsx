@@ -1,13 +1,13 @@
 import React from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, Search, Plus, User, DollarSign } from "lucide-react";
+import { Home, Search, Plus, User, MessageCircle } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 
 const NAV = [
   { icon: Home, label: "Home", path: "/" },
   { icon: Search, label: "Explore", path: "/explore" },
   { icon: Plus, label: "Record", path: "/record", fab: true },
-  { icon: DollarSign, label: "Earn", path: "/earn" },
+  { icon: MessageCircle, label: "Messages", path: "/messages" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
 

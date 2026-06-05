@@ -16,9 +16,14 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     const root = document.documentElement;
-    if (darkMode) root.classList.add("dark");
-    else root.classList.remove("dark");
-    localStorage.setItem("loopd_dark", darkMode);
+    if (darkMode) {
+      root.classList.add("dark");
+      root.style.colorScheme = "dark";
+    } else {
+      root.classList.remove("dark");
+      root.style.colorScheme = "light";
+    }
+    localStorage.setItem("loopd_dark", String(darkMode));
   }, [darkMode]);
 
   useEffect(() => {

@@ -32,7 +32,11 @@ export default function Help() {
             <div className="text-sm font-bold">Live Chat Support</div>
             <div className="text-xs opacity-80">Avg. 2 min response</div>
           </div>
-          <button className="bg-white text-sm font-bold px-3 py-1.5 rounded-full" style={{ color: accentColor }}>Chat</button>
+          <button
+            onClick={() => window.open("https://tawk.to", "_blank")}
+            className="bg-white text-sm font-bold px-3 py-1.5 rounded-full"
+            style={{ color: accentColor }}
+          >Chat</button>
         </div>
 
         {FAQS.map((faq, i) => (
@@ -46,8 +50,14 @@ export default function Help() {
         ))}
 
         <div className="flex gap-3 mt-2">
-          <button className="flex-1 py-3 rounded-xl bg-card border border-border text-sm font-semibold text-foreground">📧 Email Support</button>
-          <button className="flex-1 py-3 rounded-xl bg-card border border-border text-sm font-semibold text-foreground">🚨 Report</button>
+          <button
+            onClick={() => window.open("mailto:support@loopd.app?subject=Support Request", "_blank")}
+            className="flex-1 py-3 rounded-xl bg-card border border-border text-sm font-semibold text-foreground"
+          >📧 Email Support</button>
+          <button
+            onClick={() => window.open("mailto:report@loopd.app?subject=Report an Issue", "_blank")}
+            className="flex-1 py-3 rounded-xl bg-card border border-border text-sm font-semibold text-foreground"
+          >🚨 Report</button>
         </div>
       </div>
     </div>
