@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { ChevronLeft, Send, Mic, MicOff, Video, Square, Play, Pause } from "lucide-react";
+import { ChevronLeft, Send, Mic, Video, Square, Play, Pause, PhoneOff } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 import { timeAgo, getAvColor, getInitials } from "@/lib/utils";
@@ -15,6 +15,7 @@ export default function ChatWindow() {
   const [text, setText] = useState("");
   const [recording, setRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [showCallUI, setShowCallUI] = useState(false);
   const bottomRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
@@ -97,13 +98,16 @@ export default function ChatWindow() {
   }
 
   function startVideoCall() {
-    // Open a simple video call using a free service
+    setShowCallUI(true);
+  }
+
+  function openJitsi() {
     const roomId = conversationId.replace(/[^a-z0-9]/gi, "").slice(0, 20);
     window.open(`https://meet.jit.si/loopd-${roomId}`, "_blank");
   }
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="relative flex flex-col h-screen bg-background">
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0 border-b border-border bg-card">
         <button onClick={() => navigate("/messages")}><ChevronLeft size={22} className="text-foreground" /></button>
@@ -113,7 +117,7 @@ export default function ChatWindow() {
         <div className="flex-1">
           <div className="text-sm font-bold text-foreground">@{otherName}</div>
         </div>
-        <button onClick={startVideoCall} className="p-2 rounded-full active:bg-muted">
+        <button onClick={startVideoCall} className="p-2 rounded-full active:bg-muted" title="Start video call">
           <Video size={20} className="text-foreground" />
         </button>
       </div>
@@ -140,6 +144,17 @@ export default function ChatWindow() {
         })}
         <div ref={bottomRef} />
       </div>
+
+      {/* Video Call UI */}
+      {showCallUI && (
+        <VideoCallOverlay
+          otherName={otherName}
+          avColor={avColor}
+          accentColor={accentColor}
+          onJoin={openJitsi}
+          onClose={() => setShowCallUI(false)}
+        />
+      )}
 
       {/* Input */}
       <div className="flex items-center gap-2 px-4 py-3 border-t border-border bg-card flex-shrink-0" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
@@ -173,6 +188,50 @@ export default function ChatWindow() {
             )}
           </>
         )}
+      </div>
+    </div>
+  );
+}
+
+function VideoCallOverlay({ otherName, avColor, accentColor, onJoin, onClose }) {
+  return (
+    <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-gray-900/95 backdrop-blur-sm">
+      {/* Animated ring */}
+      <div className="relative mb-6">
+        <div className="w-24 h-24 rounded-full animate-ping absolute inset-0 opacity-20" style={{ background: accentColor }} />
+        <div className="w-24 h-24 rounded-full flex items-center justify-center font-bold text-2xl relative z-10 border-4" style={{ background: avColor.bg, color: avColor.text, borderColor: accentColor }}>
+          {getInitials(otherName)}
+        </div>
+      </div>
+
+      <div className="text-white text-xl font-bold mb-1">@{otherName}</div>
+      <div className="text-white/50 text-sm mb-10">Starting video call…</div>
+
+      {/* Info card */}
+      <div className="bg-white/10 rounded-2xl px-6 py-4 mb-10 text-center max-w-xs">
+        <div className="text-white text-sm font-semibold mb-1">🎥 Video call via Jitsi Meet</div>
+        <div className="text-white/60 text-xs">Tap "Join Call" to open a secure video room. Share the same link with @{otherName} to connect.</div>
+      </div>
+
+      {/* Buttons */}
+      <div className="flex items-center gap-6">
+        <button
+          onClick={onClose}
+          className="w-14 h-14 rounded-full bg-red-500 flex items-center justify-center shadow-lg"
+        >
+          <PhoneOff size={22} color="#fff" />
+        </button>
+        <button
+          onClick={() => { onJoin(); onClose(); }}
+          className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg"
+          style={{ background: accentColor }}
+        >
+          <Video size={22} color="#fff" />
+        </button>
+      </div>
+      <div className="flex gap-6 mt-3 text-xs text-white/40">
+        <span>Decline</span>
+        <span style={{ marginLeft: 28 }}>Join Call</span>
       </div>
     </div>
   );

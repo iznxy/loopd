@@ -112,7 +112,7 @@ export default function Home() {
       )}
 
       {/* Feed */}
-      <div ref={containerRef} className="flex-1 overflow-y-auto hide-scrollbar snap-y snap-mandatory">
+      <div ref={containerRef} className="flex-1 overflow-hidden" style={{ overflowY: "scroll", scrollSnapType: "y mandatory", WebkitOverflowScrolling: "touch" }}>
         {posts.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center gap-6 p-8 text-center">
             <div className="text-6xl">🎬</div>
@@ -169,7 +169,10 @@ function PostCard({ post, liked, relooped, onLike, onReloop, onShare, onProfile,
   const bgStyle = post.bg_class ? { background: BG_MAP[post.bg_class] || BG_MAP.bg1 } : { background: BG_MAP.bg1 };
 
   return (
-    <div className="relative h-screen snap-start flex-shrink-0 flex flex-col" style={bgStyle}>
+    <div
+      className="relative flex-shrink-0 flex flex-col"
+      style={{ ...bgStyle, height: "100svh", scrollSnapAlign: "start", scrollSnapStop: "always" }}
+    >
       {/* Video / emoji display */}
       {post.video_url ? (
         <video
