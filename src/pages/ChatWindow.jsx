@@ -180,6 +180,9 @@ export default function ChatWindow() {
 
 function VoicePlayer({ url, mine }) {
   const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
   const audioRef = useRef(null);
 
   function toggle() {
@@ -193,13 +196,97 @@ function VoicePlayer({ url, mine }) {
     }
   }
 
+  function onTimeUpdate() {
+    if (!audioRef.current) return;
+    const cur = audioRef.current.currentTime;
+    const dur = audioRef.current.duration || 0;
+    setCurrentTime(cur);
+    setProgress(dur > 0 ? cur / dur : 0);
+  }
+
+  function onLoadedMetadata() {
+    setDuration(audioRef.current?.duration || 0);
+  }
+
+  function onEnded() {
+    setPlaying(false);
+    setProgress(0);
+    setCurrentTime(0);
+  }
+
+  function seek(e) {
+    if (!audioRef.current) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    audioRef.current.currentTime = ratio * (audioRef.current.duration || 0);
+  }
+
+  function fmt(s) {
+    if (!s || isNaN(s)) return "0:00";
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m}:${sec.toString().padStart(2, "0")}`;
+  }
+
+  const btnBg = mine ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.1)";
+  const trackBg = mine ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.1)";
+  const fillBg = mine ? "rgba(255,255,255,0.8)" : "rgba(0,0,0,0.4)";
+
   return (
-    <div className="flex items-center gap-2">
-      <audio ref={audioRef} src={url} onEnded={() => setPlaying(false)} className="hidden" />
-      <button onClick={toggle} className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: mine ? "rgba(255,255,255,0.25)" : "var(--border)" }}>
-        {playing ? <Pause size={12} /> : <Play size={12} />}
+    <div className="flex items-center gap-2.5 min-w-[180px]">
+      <audio
+        ref={audioRef}
+        src={url}
+        onTimeUpdate={onTimeUpdate}
+        onLoadedMetadata={onLoadedMetadata}
+        onEnded={onEnded}
+        className="hidden"
+      />
+
+      {/* Play/Pause button */}
+      <button
+        onClick={toggle}
+        className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+        style={{ background: btnBg }}
+      >
+        {playing ? <Pause size={14} /> : <Play size={14} style={{ marginLeft: 2 }} />}
       </button>
-      <span className="text-xs opacity-80">Voice message</span>
+
+      {/* Waveform bars + scrubber */}
+      <div className="flex-1 flex flex-col gap-1">
+        {/* Fake waveform bars (decorative) + clickable progress track */}
+        <div
+          className="relative h-7 flex items-center gap-[2px] cursor-pointer"
+          onClick={seek}
+        >
+          {/* Bars */}
+          {[4,7,5,9,6,8,4,7,5,9,6,8,4,7,5,9,6,8,4,7].map((h, i) => {
+            const barFilled = (i / 20) < progress;
+            return (
+              <div
+                key={i}
+                className="flex-1 rounded-full transition-all duration-75"
+                style={{
+                  height: `${h * 2.5}px`,
+                  background: barFilled ? fillBg : trackBg,
+                  minWidth: 2,
+                }}
+              />
+            );
+          })}
+        </div>
+
+        {/* Time */}
+        <div className="flex justify-between text-[10px] opacity-60 leading-none px-0.5">
+          <span>{fmt(currentTime)}</span>
+          <span>{fmt(duration)}</span>
+        </div>
+      </div>
+
+      {/* Mic icon badge */}
+      <div className="flex-shrink-0 opacity-50">
+        <Mic size={12} />
+      </div>
     </div>
   );
 }
