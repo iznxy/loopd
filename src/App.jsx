@@ -28,6 +28,7 @@ import CreatorProfile from '@/pages/CreatorProfile';
 import Settings from '@/pages/Settings';
 import EditPost from '@/pages/EditPost';
 import EditProfile from '@/pages/EditProfile';
+import ClassicVinesPage from '@/pages/ClassicVines';
 import Analytics from '@/pages/Analytics';
 import Privacy from '@/pages/Privacy';
 import Help from '@/pages/Help';
@@ -82,6 +83,7 @@ const AuthenticatedApp = () => {
         <Route path="/help" element={<Help />} />
         <Route path="/notif-settings" element={<NotifSettings />} />
         <Route path="/edit-post" element={<EditPost />} />
+        <Route path="/classic-vines" element={<ClassicVinesPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

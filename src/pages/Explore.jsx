@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, X, TrendingUp, Hash, Users, Film } from "lucide-react";
-import ClassicVines from "@/components/ClassicVines";
+
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 import { fmtN, getAvColor, getInitials } from "@/lib/utils";
@@ -169,7 +169,20 @@ export default function Explore() {
             </div>
           </div>
         ) : activeTab === "vines" ? (
-          <ClassicVines />
+          <div className="flex flex-col items-center justify-center py-16 px-6 gap-4">
+            <div className="text-5xl">🍇</div>
+            <div className="text-center">
+              <div className="font-bold text-foreground text-base mb-1">Classic Vines Archive</div>
+              <div className="text-sm text-muted-foreground leading-relaxed">Browse the iconic 6-second loops that defined internet culture from 2013–2017.</div>
+            </div>
+            <button
+              onClick={() => navigate("/classic-vines")}
+              className="px-6 py-3 rounded-full text-white text-sm font-bold"
+              style={{ background: accentColor }}
+            >
+              Open Vine Archive →
+            </button>
+          </div>
         ) : (
           <div className="grid grid-cols-3 gap-0.5">
             {filteredPosts.map(post => (
