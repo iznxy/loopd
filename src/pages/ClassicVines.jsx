@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Play, ExternalLink, ChevronDown, ChevronUp, Copyright } from "lucide-react";
+import { ChevronLeft, Play, ExternalLink, ChevronDown, ChevronUp, Copyright, HardDrive } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
+import DriveImporter from "@/components/DriveImporter";
 
 // All YouTube IDs verified live as of 2024-2026
 const CLASSIC_VINES = [
@@ -79,6 +80,15 @@ export default function ClassicVines() {
   const { accentColor } = useTheme();
   const [activeCategory, setActiveCategory] = useState("All");
   const [showStory, setShowStory] = useState(false);
+  const [showDriveImporter, setShowDriveImporter] = useState(false);
+  const [driveClips, setDriveClips] = useState([]);
+
+  function handleDriveImport(files) {
+    setDriveClips(prev => {
+      const existingIds = new Set(prev.map(f => f.id));
+      return [...prev, ...files.filter(f => !existingIds.has(f.id))];
+    });
+  }
 
   const filtered = activeCategory === "All"
     ? CLASSIC_VINES
@@ -95,6 +105,14 @@ export default function ClassicVines() {
           <h1 className="text-base font-bold text-foreground">🍇 Classic Vines</h1>
           <p className="text-[11px] text-muted-foreground">The originals that defined internet culture</p>
         </div>
+        <button
+          onClick={() => setShowDriveImporter(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white flex-shrink-0"
+          style={{ background: accentColor }}
+        >
+          <HardDrive size={13} />
+          Drive
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto hide-scrollbar">
@@ -226,6 +244,55 @@ export default function ClassicVines() {
             </div>
           ))}
 
+          {/* Drive-imported clips */}
+          {driveClips.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <HardDrive size={14} style={{ color: accentColor }} />
+                <span className="text-xs font-bold text-foreground">From Your Drive</span>
+                <span className="text-[10px] text-muted-foreground">({driveClips.length} clip{driveClips.length > 1 ? "s" : ""})</span>
+              </div>
+              <div className="space-y-3">
+                {driveClips.map(file => (
+                  <div key={file.id} className="rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
+                    <div className="relative w-full overflow-hidden bg-muted" style={{ aspectRatio: "16/9" }}>
+                      {file.thumbnailLink
+                        ? <img src={file.thumbnailLink} alt={file.name} className="w-full h-full object-cover" />
+                        : <div className="w-full h-full flex items-center justify-center text-4xl">🎬</div>
+                      }
+                      <a
+                        href={file.webViewLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="absolute inset-0 bg-black/30 flex items-center justify-center"
+                      >
+                        <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                          <Play size={24} className="text-black ml-1" fill="black" />
+                        </div>
+                      </a>
+                      <span className="absolute top-3 left-3 text-[10px] font-bold text-white bg-black/60 rounded-full px-2.5 py-1 pointer-events-none">
+                        Drive
+                      </span>
+                    </div>
+                    <div className="px-4 py-3">
+                      <div className="text-sm font-bold text-foreground truncate mb-2">{file.name}</div>
+                      <a
+                        href={file.webViewLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-white text-sm font-bold"
+                        style={{ background: accentColor, display: "flex" }}
+                      >
+                        <ExternalLink size={14} />
+                        Open in Drive
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Global disclaimer */}
           <div className="bg-muted rounded-2xl px-4 py-4 text-center">
             <div className="text-base mb-1">🍇</div>
@@ -236,6 +303,12 @@ export default function ClassicVines() {
           </div>
         </div>
       </div>
+      {showDriveImporter && (
+        <DriveImporter
+          onImport={handleDriveImport}
+          onClose={() => setShowDriveImporter(false)}
+        />
+      )}
     </div>
   );
 }
