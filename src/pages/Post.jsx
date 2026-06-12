@@ -27,7 +27,7 @@ export default function Post() {
   const [isAdult, setIsAdult] = useState(false);
   const [allowComments, setAllowComments] = useState(true);
   const [visibility, setVisibility] = useState("public");
-  const [selectedFilter, setSelectedFilter] = useState("none");
+  const [selectedFilter, setSelectedFilter] = useState(location.state?.filter || "none");
   const [allowDownloads, setAllowDownloads] = useState(true);
   const [loading, setLoading] = useState(false);
 

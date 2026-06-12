@@ -269,6 +269,18 @@ export default function Home() {
         setPosts(data);
         setLoading(false);
       }).catch(() => setLoading(false));
+
+    // Real-time updates
+    const unsub = base44.entities.Post.subscribe((event) => {
+      if (event.type === "create" && event.data && !event.data.is_draft) {
+        setPosts(prev => [event.data, ...prev]);
+      } else if (event.type === "update" && event.data) {
+        setPosts(prev => prev.map(p => p.id === event.data.id ? { ...p, ...event.data } : p));
+      } else if (event.type === "delete") {
+        setPosts(prev => prev.filter(p => p.id !== event.id));
+      }
+    });
+    return unsub;
   }, []);
 
   // Pull to refresh
