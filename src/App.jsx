@@ -26,6 +26,7 @@ import ChatWindow from '@/pages/ChatWindow';
 import Notifications from '@/pages/Notifications';
 import CreatorProfile from '@/pages/CreatorProfile';
 import Settings from '@/pages/Settings';
+import EditPost from '@/pages/EditPost';
 import EditProfile from '@/pages/EditProfile';
 import Analytics from '@/pages/Analytics';
 import Privacy from '@/pages/Privacy';
@@ -80,6 +81,7 @@ const AuthenticatedApp = () => {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/help" element={<Help />} />
         <Route path="/notif-settings" element={<NotifSettings />} />
+        <Route path="/edit-post" element={<EditPost />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

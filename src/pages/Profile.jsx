@@ -151,7 +151,8 @@ export default function Profile() {
         <div className="grid grid-cols-3 gap-0.5">
           {displayPosts.map(post => (
             <div key={post.id} className="aspect-[9/16] relative cursor-pointer overflow-hidden"
-              style={{ background: BG_MAP[post.bg_class] || BG_MAP.bg1 }}>
+              style={{ background: BG_MAP[post.bg_class] || BG_MAP.bg1 }}
+              onClick={() => tab === "loops" && navigate(`/edit-post?id=${post.id}`)}>
               {post.video_url
                 ? <video src={post.video_url} className="w-full h-full object-cover" muted />
                 : <div className="w-full h-full flex items-center justify-center text-3xl">{post.emoji || "🎬"}</div>
@@ -160,6 +161,11 @@ export default function Profile() {
               <div className="absolute bottom-1.5 left-1.5">
                 <span className="text-white text-[10px] font-bold drop-shadow">▶ {fmtN(post.views_count || 0)}</span>
               </div>
+              {tab === "loops" && (
+                <div className="absolute top-1.5 right-1.5">
+                  <span className="text-white text-[9px] bg-black/40 rounded px-1 py-0.5">✏️</span>
+                </div>
+              )}
             </div>
           ))}
         </div>

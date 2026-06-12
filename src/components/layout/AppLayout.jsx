@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
-import { Home, Search, PlusSquare, Bell, User } from "lucide-react";
+import { Home, Search, PlusSquare, Bell, User, MessageCircle } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 
@@ -23,6 +23,7 @@ export default function AppLayout() {
     { path: "/", icon: Home, label: "Home" },
     { path: "/explore", icon: Search, label: "Explore" },
     { path: "/record", icon: PlusSquare, label: "Create" },
+    { path: "/messages", icon: MessageCircle, label: "Messages" },
     { path: "/notifications", icon: Bell, label: "Alerts", badge: unreadNotifs },
     { path: "/profile", icon: User, label: "Profile" },
   ];

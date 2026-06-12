@@ -4,6 +4,7 @@ import { ChevronLeft, MessageCircle } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 import { fmtN, getAvColor, getInitials } from "@/lib/utils";
+import TipModal from "@/components/TipModal";
 
 const BG_MAP = {
   bg1: "linear-gradient(135deg,#667eea,#764ba2)",
@@ -25,6 +26,7 @@ export default function CreatorProfile() {
   const [isFollowing, setIsFollowing] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showTip, setShowTip] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(async me => {
@@ -145,6 +147,13 @@ export default function CreatorProfile() {
                 >
                   <MessageCircle size={15} /> Message
                 </button>
+                <button
+                  onClick={() => setShowTip(true)}
+                  className="px-4 py-2.5 rounded-xl text-sm font-bold"
+                  style={{ background: "#e91e8c20", color: "#e91e8c" }}
+                >
+                  💝 Tip
+                </button>
               </div>
             )}
           </div>
@@ -167,6 +176,7 @@ export default function CreatorProfile() {
           </div>
         </>
       )}
+      {showTip && creator && <TipModal creator={creator} onClose={() => setShowTip(false)} />}
     </div>
   );
 }
