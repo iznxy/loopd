@@ -139,7 +139,6 @@ const VINE_STORY = [
 export default function ClassicVines() {
   const { accentColor } = useTheme();
   const [activeCategory, setActiveCategory] = useState("All");
-  const [playingId, setPlayingId] = useState(null);
   const [showStory, setShowStory] = useState(false);
 
   const filtered = activeCategory === "All"
@@ -219,27 +218,17 @@ export default function ClassicVines() {
               <p className="text-xs text-muted-foreground italic">{vine.quote}</p>
             </div>
 
-            {playingId === vine.id ? (
-              <div className="mx-4 mb-3 rounded-xl overflow-hidden" style={{ aspectRatio: "16/9" }}>
-                <iframe
-                  src={`https://www.youtube.com/embed/${vine.youtubeId}?autoplay=1&rel=0`}
-                  className="w-full h-full"
-                  allow="autoplay; encrypted-media"
-                  allowFullScreen
-                  title={vine.title}
-                />
-              </div>
-            ) : (
-              <div className="mx-4 mb-3">
-                <button
-                  onClick={() => setPlayingId(vine.id)}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white text-sm font-bold"
-                  style={{ background: accentColor }}
-                >
-                  <Play size={16} fill="white" /> Watch Original
-                </button>
-              </div>
-            )}
+            <div className="mx-4 mb-3">
+              <a
+                href={`https://www.youtube.com/watch?v=${vine.youtubeId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white text-sm font-bold"
+                style={{ background: accentColor, display: "flex" }}
+              >
+                <Play size={16} fill="white" /> Watch Original on YouTube
+              </a>
+            </div>
 
             <div className="px-4 pb-3">
               <p className="text-[10px] text-muted-foreground">{vine.copyright}</p>
