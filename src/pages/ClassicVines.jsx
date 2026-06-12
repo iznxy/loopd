@@ -3,66 +3,63 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Play, ExternalLink, ChevronDown, ChevronUp, Copyright } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 
+// All YouTube IDs verified live as of 2024-2026
 const CLASSIC_VINES = [
   {
     id: "cv1",
     title: "Iconic & Legendary Vine Compilation",
-    creator: "DinahSo",
-    creatorHandle: "@DinahSo",
+    creator: "Warenya (DinahSo)",
+    creatorHandle: "@Warenya",
     year: "2013–2016",
     quote: "Classic vines for when life gives you lemons. Road Work Ahead, Hi Welcome to Chilis, and all the greats.",
     category: "Compilation",
     emoji: "🍇",
     gradient: "linear-gradient(135deg,#f093fb,#f5576c)",
     youtubeId: "nwP3TeK-fPs",
-    copyright: "Original clips belong to their respective Vine creators. Compiled by DinahSo for preservation purposes.",
-    copyrightYear: "2013–2016",
-    thumbnail: "https://img.youtube.com/vi/nwP3TeK-fPs/mqdefault.jpg",
+    copyright: "Original clips © their respective Vine creators. Compiled by Warenya for preservation. 12M+ views.",
+    views: "12M views",
   },
   {
     id: "cv2",
-    title: "2014 Vine Compilation",
-    creator: "Various Vine Creators",
-    creatorHandle: "@vine",
-    year: "2014",
-    quote: "The year Vine exploded. Every classic format was born here — the golden age of 6-second comedy.",
+    title: "Best Vines of 2013 Compilation",
+    creator: "MarQuis Trill",
+    creatorHandle: "@MarQuisTrill",
+    year: "2013",
+    quote: "The year it all began. 3+ hours of the earliest and most iconic 6-second clips ever made.",
     category: "Compilation",
     emoji: "📅",
     gradient: "linear-gradient(135deg,#43e97b,#38f9d7)",
-    youtubeId: "CPqL-V20hXw",
-    copyright: "All individual clips © their original creators, 2014. Compiled for archival/educational purposes.",
-    copyrightYear: "2014",
-    thumbnail: "https://img.youtube.com/vi/CPqL-V20hXw/mqdefault.jpg",
+    youtubeId: "DAVwQBPAySo",
+    copyright: "All clips © original Vine creators, 2013. Compiled under Fair Use for archival/educational purposes.",
+    views: "110K views",
   },
   {
     id: "cv3",
-    title: "Musical Vine Compilation 2013–2017",
-    creator: "Various Vine Creators",
-    creatorHandle: "@vine",
-    year: "2013–2017",
-    quote: "Music was a HUGE part of so many vines. These might get stuck in your head.",
-    category: "Music",
-    emoji: "🎵",
+    title: "Compilation of Vines 2013",
+    creator: "SQUYM",
+    creatorHandle: "@jeremy25200",
+    year: "2013–2014",
+    quote: "23 minutes of pure 2013 Vine gold — the clips that started the revolution.",
+    category: "Compilation",
+    emoji: "🎬",
     gradient: "linear-gradient(135deg,#667eea,#764ba2)",
-    youtubeId: "SsHG3ofm6pg",
-    copyright: "Musical clips © their respective Vine creators. Music rights belong to original artists & labels.",
-    copyrightYear: "2013–2017",
-    thumbnail: "https://img.youtube.com/vi/SsHG3ofm6pg/mqdefault.jpg",
+    youtubeId: "l0Odbrmt4wc",
+    copyright: "All clips © their respective Vine creators. Compiled by SQUYM for preservation.",
+    views: "228K views",
   },
   {
     id: "cv4",
-    title: "Jerome Jarre Best Vines 2015",
-    creator: "Jerome Jarre",
-    creatorHandle: "@JeromeJarre",
-    year: "2015",
-    quote: "Jerome Jarre was one of Vine's biggest international stars — his energy was unmistakable.",
-    category: "Comedy",
-    emoji: "😂",
+    title: "Musical Vine Compilation 2013–2017",
+    creator: "Various",
+    creatorHandle: "@vine",
+    year: "2013–2017",
+    quote: "Music was a HUGE part of so many vines. These will get stuck in your head.",
+    category: "Music",
+    emoji: "🎵",
     gradient: "linear-gradient(135deg,#fa709a,#fee140)",
-    youtubeId: "uL8U7cGJSdQ",
-    copyright: "© Jerome Jarre, 2015. All rights reserved.",
-    copyrightYear: "2015",
-    thumbnail: "https://img.youtube.com/vi/uL8U7cGJSdQ/mqdefault.jpg",
+    youtubeId: "SsHG3ofm6pg",
+    copyright: "Musical clips © their respective Vine creators. Music rights belong to original artists & labels.",
+    views: "Preserved compilation",
   },
 ];
 
@@ -158,31 +155,34 @@ export default function ClassicVines() {
           {filtered.map(vine => (
             <div key={vine.id} className="rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
               {/* Thumbnail */}
-              <div className="relative w-full" style={{ aspectRatio: "16/9", background: vine.gradient }}>
+              <div className="relative w-full overflow-hidden" style={{ aspectRatio: "16/9", background: vine.gradient }}>
                 <img
-                  src={vine.thumbnail}
+                  src={`https://i.ytimg.com/vi/${vine.youtubeId}/hqdefault.jpg`}
                   alt={vine.title}
                   className="w-full h-full object-cover"
                   onError={e => { e.target.style.display = "none"; }}
                 />
                 {/* Play overlay */}
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                  <a
-                    href={`https://www.youtube.com/watch?v=${vine.youtubeId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
-                  >
+                <a
+                  href={`https://www.youtube.com/watch?v=${vine.youtubeId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute inset-0 bg-black/30 flex items-center justify-center"
+                >
+                  <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
                     <Play size={28} className="text-black ml-1" fill="black" />
-                  </a>
-                </div>
+                  </div>
+                </a>
                 {/* Category badge */}
-                <span className="absolute top-3 right-3 text-[10px] font-bold text-white bg-black/50 rounded-full px-2.5 py-1">
+                <span className="absolute top-3 right-3 text-[10px] font-bold text-white bg-black/60 rounded-full px-2.5 py-1 pointer-events-none">
                   {vine.category}
                 </span>
-                {/* Year badge */}
-                <span className="absolute top-3 left-3 text-[10px] font-bold text-white bg-black/50 rounded-full px-2.5 py-1">
+                {/* Year + views badge */}
+                <span className="absolute top-3 left-3 text-[10px] font-bold text-white bg-black/60 rounded-full px-2.5 py-1 pointer-events-none">
                   {vine.year}
+                </span>
+                <span className="absolute bottom-3 left-3 text-[10px] text-white bg-black/60 rounded-full px-2.5 py-1 pointer-events-none">
+                  ▶ {vine.views}
                 </span>
               </div>
 
@@ -201,7 +201,7 @@ export default function ClassicVines() {
                   </div>
                   <div>
                     <div className="text-xs font-bold text-foreground">{vine.creator}</div>
-                    <div className="text-[10px] text-muted-foreground">{vine.creatorHandle} · {vine.year}</div>
+                  <div className="text-[10px] text-muted-foreground">{vine.creatorHandle} · {vine.year}</div>
                   </div>
                 </div>
 
