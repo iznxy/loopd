@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ChevronLeft, Save } from "lucide-react";
+import { ChevronLeft, Save, Trash2, Archive } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 
@@ -18,6 +18,7 @@ export default function EditPost() {
   const [allowDownloads, setAllowDownloads] = useState(true);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (!postId) { navigate(-1); return; }
@@ -37,6 +38,16 @@ export default function EditPost() {
     setSaving(true);
     await base44.entities.Post.update(postId, { caption, tags, visibility, allow_comments: allowComments, allow_downloads: allowDownloads });
     navigate(-1);
+  }
+
+  async function archive() {
+    await base44.entities.Post.update(postId, { visibility: "private", is_draft: true });
+    navigate(-1);
+  }
+
+  async function deletePost() {
+    await base44.entities.Post.delete(postId);
+    navigate("/profile");
   }
 
   if (loading) {
@@ -134,7 +145,46 @@ export default function EditPost() {
             </div>
           ))}
         </div>
+
+        {/* Danger zone */}
+        <div className="space-y-2 pt-2 pb-6">
+          <button
+            onClick={archive}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border text-sm font-semibold text-foreground"
+          >
+            <Archive size={16} className="text-muted-foreground" />
+            Archive loop (hide from feed)
+          </button>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border border-destructive/40 text-sm font-semibold text-destructive"
+          >
+            <Trash2 size={16} />
+            Delete loop permanently
+          </button>
+        </div>
       </div>
+
+      {/* Delete confirmation */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/50" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="w-full bg-card rounded-t-3xl p-5 animate-slide-up" onClick={e => e.stopPropagation()}>
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-4" />
+            <div className="text-base font-bold text-foreground mb-1">Delete this loop?</div>
+            <div className="text-sm text-muted-foreground mb-5">This can't be undone. The loop will be permanently removed.</div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-3 rounded-xl border border-border text-sm font-bold text-foreground"
+              >Cancel</button>
+              <button
+                onClick={deletePost}
+                className="flex-1 py-3 rounded-xl text-sm font-bold text-white bg-destructive"
+              >Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
