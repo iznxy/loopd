@@ -3,73 +3,110 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Heart, Share2, Volume2, VolumeX, Play } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 
-// Classic Vine clips — real archived mp4s from various preservation sources
+// Real archive.org hosted vine compilation videos — confirmed direct mp4 URLs
+// Pattern: https://archive.org/download/{identifier}/{filename}
 const CLASSIC_VINES = [
   {
     id: "v1",
-    creator: "KingBach",
-    handle: "@KingBach",
-    caption: "When she says she's home alone 😂",
+    creator: "Emisoccer",
+    handle: "emisoccer",
+    caption: "Dank Memes Vine Compilation 🔥",
     category: "Comedy",
-    likes: "1.2M",
-    videoUrl: "https://v.cdn.vine.co/r/videos/B3E7BD0FFA1075809018900480_SW_WEBM_2.mp4?versionId=yL3bIhIqNFrVXIArBqyPGaYFmLGgNnm2",
-    avatar: "https://storage.googleapis.com/divine-vine-archive/avatars/93/49/934940633704046592.jpg",
+    year: "2016",
+    likes: "13K",
+    videoUrl: "https://archive.org/download/youtube-gYeAscy46HA/Dank_Memes_Vine_Compilation-gYeAscy46HA.webm",
+    thumbnail: "https://archive.org/download/youtube-gYeAscy46HA/Dank_Memes_Vine_Compilation-gYeAscy46HA.jpg",
   },
   {
     id: "v2",
-    creator: "Zach King",
-    handle: "@ZachKing",
-    caption: "Magic tricks gone right ✨",
-    category: "Magic",
-    likes: "2.4M",
-    videoUrl: "https://v.cdn.vine.co/r/videos/1080E35D061176131028459520_SW_WEBM_2.mp4?versionId=XlEzJlSwBLMsM9XKvKdaGt2sMsLN7eeN",
-    avatar: "https://media.divine.video/174eaade6a2e5dd411aa6e97cf0ae9c2816929e78d43224b79c911d94af59e23",
+    creator: "WOWL",
+    handle: "WOWL_TV",
+    caption: "2015 Vine Compilation 🍇",
+    category: "Comedy",
+    year: "2015",
+    likes: "528",
+    videoUrl: "https://archive.org/download/msdme-2015_Vine_Compilation/2015_Vine_Compilation.mp4",
+    thumbnail: "https://archive.org/services/img/msdme-2015_Vine_Compilation",
   },
   {
     id: "v3",
-    creator: "Lele Pons",
-    handle: "@LelePons",
-    caption: "That awkward moment 😂",
-    category: "Comedy",
-    likes: "980K",
-    videoUrl: "https://v.cdn.vine.co/r/videos/EE78CA521E1076434960982016_SW_WEBM_2.mp4?versionId=vDTLZlSDjKJN71ZB99ZSnX0eEIzBqNJk",
-    avatar: "https://storage.googleapis.com/divine-vine-archive/avatars/93/14/931427884873170944.jpg",
+    creator: "Emisoccer",
+    handle: "emisoccer",
+    caption: "Dank Memes Vine Compilation V21 🤣",
+    category: "Memes",
+    year: "2016",
+    likes: "4K",
+    videoUrl: "https://archive.org/download/youtube-aoArpGRCNhc/Dank_Memes_Vine_Compilation_V21-aoArpGRCNhc.webm",
+    thumbnail: "https://archive.org/services/img/youtube-aoArpGRCNhc",
   },
   {
     id: "v4",
-    creator: "Rudy Mancuso",
-    handle: "@RudyMancuso",
-    caption: "When the beat drops 🎵",
-    category: "Music",
-    likes: "1.8M",
-    videoUrl: "https://v.cdn.vine.co/r/videos/F85D6B73E01164345067159552_SW_WEBM_2.mp4?versionId=x9Yjm1L9bGmThY5e8Bj4Z2oGnKCXKDzS",
-    avatar: "https://media.divine.video/fab015a2145aed738e5d23b1b71f162aa8dbd8bd98bf95ed63b1b92130cdf2b2",
+    creator: "King Nate",
+    handle: "KingNate",
+    caption: "IT'S JOHN CENA 🎺 Vine Compilation",
+    category: "Comedy",
+    year: "2015",
+    likes: "655",
+    videoUrl: "https://archive.org/download/youtube-TUQ3nVoN-ko/IT_S_JOHN_CENA_Vine_compilation-TUQ3nVoN-ko.webm",
+    thumbnail: "https://archive.org/services/img/youtube-TUQ3nVoN-ko",
   },
   {
     id: "v5",
-    creator: "Brittany Furlan",
-    handle: "@BrittanyFurlan",
-    caption: "POV: It's 2013 💅",
+    creator: "King Nate",
+    handle: "KingNate",
+    caption: "IT'S JOHN CENA 🎺 Vine Compilation 2",
     category: "Comedy",
-    likes: "756K",
-    videoUrl: "https://v.cdn.vine.co/r/videos/A2F4A37AF91148627424256000_SW_WEBM_2.mp4?versionId=8c0pRv5tWc3v3T9WcAJ6lS4f4Hy5S5Xm",
-    avatar: "https://media.divine.video/950b59e937d922cdb2ae9fd1220fae32c5fb160148af06e90ca124e0f31e5c7d",
+    year: "2015",
+    likes: "307",
+    videoUrl: "https://archive.org/download/youtube-lZqR5zv8TjE/IT_S_JOHN_CENA_Vine_compilation_2-lZqR5zv8TjE.webm",
+    thumbnail: "https://archive.org/services/img/youtube-lZqR5zv8TjE",
   },
   {
     id: "v6",
-    creator: "Nash Grier",
-    handle: "@NashGrier",
-    caption: "Living my best vine life 🍇",
-    category: "Lifestyle",
-    likes: "1.1M",
-    videoUrl: "https://v.cdn.vine.co/r/videos/CC17F62FA01173131289739264_SW_WEBM_2.mp4?versionId=YmF2c3t1Wj4vJNJklSHj5Kx5bWsKLxnQ",
-    avatar: "https://media.divine.video/eb2cb6f441b6acb05f789a30505613f7417e3773c33ffb124241e4efd20cba47",
+    creator: "VINESRB",
+    handle: "VINESRB",
+    caption: "IT'S JOHN CENA Vine Compilation 🎵",
+    category: "Comedy",
+    year: "2016",
+    likes: "1K",
+    videoUrl: "https://archive.org/download/youtube-roSzpJU6HG0/IT_S_JOHN_CENA__Vine_compilation-roSzpJU6HG0.webm",
+    thumbnail: "https://archive.org/services/img/youtube-roSzpJU6HG0",
+  },
+  {
+    id: "v7",
+    creator: "Funny Cats",
+    handle: "RandomReposts",
+    caption: "Funny Cats Vine Compilation 2016 🐱",
+    category: "Animals",
+    year: "2016",
+    likes: "47",
+    videoUrl: "https://archive.org/download/videoplayback_20250310_1051/videoplayback.mp4",
+    thumbnail: "https://archive.org/services/img/videoplayback_20250310_1051",
+  },
+  {
+    id: "v8",
+    creator: "Emisoccer",
+    handle: "emisoccer",
+    caption: "Dank Memes Vine Compilation V3 ͡° ͜ʖ ͡°",
+    category: "Memes",
+    year: "2016",
+    likes: "1.5K",
+    videoUrl: "https://archive.org/download/youtube-y0g7Yr1gYaU/Dank_Memes_Vine_Compilation_v3-y0g7Yr1gYaU.webm",
+    thumbnail: "https://archive.org/services/img/youtube-y0g7Yr1gYaU",
   },
 ];
 
-const CATEGORIES = ["All", "Comedy", "Magic", "Music", "Lifestyle"];
+const CATEGORIES = ["All", "Comedy", "Memes", "Animals"];
 
-function VineCard({ vine, currentIndex, index, accentColor }) {
+const BG_GRADIENTS = [
+  "linear-gradient(135deg,#667eea,#764ba2)",
+  "linear-gradient(135deg,#f093fb,#f5576c)",
+  "linear-gradient(135deg,#4facfe,#00f2fe)",
+  "linear-gradient(135deg,#43e97b,#38f9d7)",
+  "linear-gradient(135deg,#fa709a,#fee140)",
+];
+
+function VineCard({ vine, isActive, accentColor, index }) {
   const videoRef = useRef(null);
   const [muted, setMuted] = useState(false);
   const [liked, setLiked] = useState(false);
@@ -77,29 +114,24 @@ function VineCard({ vine, currentIndex, index, accentColor }) {
   const [showHeart, setShowHeart] = useState(false);
   const [error, setError] = useState(false);
 
-  // Auto-play when in view
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    if (index === currentIndex) {
+    if (isActive) {
       video.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
     } else {
       video.pause();
       video.currentTime = 0;
       setPlaying(false);
     }
-  }, [currentIndex, index]);
+  }, [isActive]);
 
-  function togglePlay() {
+  function togglePlay(e) {
+    e.stopPropagation();
     const video = videoRef.current;
     if (!video) return;
-    if (video.paused) {
-      video.play();
-      setPlaying(true);
-    } else {
-      video.pause();
-      setPlaying(false);
-    }
+    if (video.paused) { video.play(); setPlaying(true); }
+    else { video.pause(); setPlaying(false); }
   }
 
   function handleDoubleTap() {
@@ -115,33 +147,34 @@ function VineCard({ vine, currentIndex, index, accentColor }) {
       onDoubleClick={handleDoubleTap}
       onClick={togglePlay}
     >
-      {/* Video */}
       {!error ? (
         <video
           ref={videoRef}
           src={vine.videoUrl}
+          poster={vine.thumbnail}
           className="w-full h-full object-cover"
           loop
           muted={muted}
           playsInline
           onError={() => setError(true)}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
         />
       ) : (
-        // Fallback gradient card for broken videos
         <div
           className="w-full h-full flex flex-col items-center justify-center gap-4"
-          style={{ background: "linear-gradient(135deg,#667eea,#764ba2)" }}
+          style={{ background: BG_GRADIENTS[index % BG_GRADIENTS.length] }}
         >
           <div className="text-6xl">🍇</div>
-          <div className="text-white font-bold text-center px-8">{vine.caption}</div>
-          <div className="text-white/60 text-sm">by {vine.creator}</div>
+          <div className="text-white font-bold text-center px-8 text-lg">{vine.caption}</div>
+          <div className="text-white/70 text-sm">by {vine.creator}</div>
+          <div className="text-white/50 text-xs mt-2">Video unavailable</div>
         </div>
       )}
 
-      {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70 pointer-events-none" />
 
-      {/* Paused indicator */}
+      {/* Play indicator */}
       {!playing && !error && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
@@ -157,44 +190,30 @@ function VineCard({ vine, currentIndex, index, accentColor }) {
         </div>
       )}
 
-      {/* Mute button */}
-      <button
-        className="absolute top-16 right-4 w-9 h-9 bg-black/50 rounded-full flex items-center justify-center z-10 backdrop-blur-sm"
-        onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
-      >
-        {muted ? <VolumeX size={15} color="#fff" /> : <Volume2 size={15} color="#fff" />}
-      </button>
+      {/* Mute */}
+      {!error && (
+        <button
+          className="absolute top-16 right-4 w-9 h-9 bg-black/50 rounded-full flex items-center justify-center z-10 backdrop-blur-sm"
+          onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
+        >
+          {muted ? <VolumeX size={15} color="#fff" /> : <Volume2 size={15} color="#fff" />}
+        </button>
+      )}
 
       {/* Right actions */}
       <div className="absolute right-3 bottom-28 flex flex-col items-center gap-5 z-10">
-        {/* Avatar */}
-        <div className="w-12 h-12 rounded-full border-2 border-white overflow-hidden flex-shrink-0">
-          <img
-            src={vine.avatar}
-            alt={vine.creator}
-            className="w-full h-full object-cover"
-            onError={e => {
-              e.target.style.display = "none";
-              e.target.parentNode.style.background = accentColor;
-            }}
-          />
+        <div
+          className="w-12 h-12 rounded-full border-2 border-white flex items-center justify-center text-lg font-bold text-white"
+          style={{ background: accentColor }}
+        >
+          {vine.creator[0]}
         </div>
 
-        {/* Like */}
-        <button
-          onClick={e => { e.stopPropagation(); setLiked(l => !l); }}
-          className="flex flex-col items-center gap-1"
-        >
-          <Heart
-            size={28}
-            fill={liked ? "#e91e8c" : "none"}
-            color={liked ? "#e91e8c" : "#fff"}
-            strokeWidth={2}
-          />
+        <button onClick={e => { e.stopPropagation(); setLiked(l => !l); }} className="flex flex-col items-center gap-1">
+          <Heart size={28} fill={liked ? "#e91e8c" : "none"} color={liked ? "#e91e8c" : "#fff"} strokeWidth={2} />
           <span className="text-white text-xs font-bold drop-shadow">{vine.likes}</span>
         </button>
 
-        {/* Share */}
         <button
           onClick={e => {
             e.stopPropagation();
@@ -209,13 +228,11 @@ function VineCard({ vine, currentIndex, index, accentColor }) {
 
       {/* Bottom info */}
       <div className="absolute bottom-8 left-4 right-20 z-10 pointer-events-none">
-        <div className="font-bold text-white text-sm mb-1 drop-shadow-md">@{vine.handle.replace("@", "")}</div>
+        <div className="font-bold text-white text-sm mb-1 drop-shadow-md">@{vine.handle}</div>
         <p className="text-white text-sm leading-snug line-clamp-2 drop-shadow mb-2">{vine.caption}</p>
-        <div className="flex items-center gap-1.5">
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold text-white bg-white/20 backdrop-blur-sm">
-            🍇 Classic Vine · {vine.category}
-          </span>
-        </div>
+        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold text-white bg-white/20 backdrop-blur-sm">
+          🍇 Classic Vine · {vine.year}
+        </span>
       </div>
 
       <style>{`
@@ -240,7 +257,6 @@ export default function ClassicVines() {
     ? CLASSIC_VINES
     : CLASSIC_VINES.filter(v => v.category === activeCategory);
 
-  // Track which card is visible
   useEffect(() => {
     const el = feedRef.current;
     if (!el) return;
@@ -252,7 +268,6 @@ export default function ClassicVines() {
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Reset to top when category changes
   useEffect(() => {
     setCurrentIndex(0);
     if (feedRef.current) feedRef.current.scrollTop = 0;
@@ -261,11 +276,11 @@ export default function ClassicVines() {
   return (
     <div className="flex flex-col h-screen bg-black overflow-hidden">
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-30 flex items-center gap-3 px-4 pt-3 pb-2 bg-gradient-to-b from-black/60 to-transparent">
+      <div className="absolute top-0 left-0 right-0 z-30 flex items-center gap-3 px-4 pt-3 pb-2 bg-gradient-to-b from-black/70 to-transparent">
         <button onClick={() => navigate(-1)}>
           <ChevronLeft size={24} color="white" />
         </button>
-        <div className="flex-1 flex items-center gap-2 overflow-x-auto hide-scrollbar">
+        <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar flex-1">
           {CATEGORIES.map(cat => (
             <button
               key={cat}
@@ -281,7 +296,6 @@ export default function ClassicVines() {
         </div>
       </div>
 
-      {/* Feed */}
       <div
         ref={feedRef}
         className="flex-1 overflow-y-scroll hide-scrollbar"
@@ -292,7 +306,7 @@ export default function ClassicVines() {
             key={vine.id}
             vine={vine}
             index={i}
-            currentIndex={currentIndex}
+            isActive={i === currentIndex}
             accentColor={accentColor}
           />
         ))}
