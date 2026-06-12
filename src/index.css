@@ -90,3 +90,17 @@
     @apply bg-background text-foreground font-body;
   }
 }
+
+/* Hide scrollbar cross-browser */
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Smooth scroll snapping for feeds */
+[style*="scroll-snap-type"] {
+  scroll-behavior: smooth;
+}
