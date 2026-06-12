@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 import { BG_CLASSES, EMOJIS } from "@/lib/constants";
 import { FilterPicker } from "@/components/VideoFilters";
+import MusicPicker from "@/components/MusicPicker";
 
 const BG_MAP = {
   bg1: "linear-gradient(135deg,#667eea,#764ba2)",
@@ -30,6 +31,8 @@ export default function Post() {
   const [selectedFilter, setSelectedFilter] = useState(location.state?.filter || "none");
   const [allowDownloads, setAllowDownloads] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [showMusicPicker, setShowMusicPicker] = useState(false);
+  const [music, setMusic] = useState(location.state?.music || "");
 
   async function publish() {
     setLoading(true);
@@ -44,6 +47,7 @@ export default function Post() {
       emoji,
       bg_class: bgClass,
       filter: selectedFilter,
+      music: music || undefined,
       video_url: videoUrl,
       is_adult: isAdult,
       allow_comments: allowComments,
@@ -152,6 +156,19 @@ export default function Post() {
           </div>
         </div>
 
+        {/* Music picker */}
+        <div>
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide block mb-1.5">🎵 Music</label>
+          <button
+            onClick={() => setShowMusicPicker(true)}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border bg-card text-sm text-foreground"
+          >
+            <span className="text-lg">{music ? "🎵" : "🔇"}</span>
+            <span className="flex-1 text-left font-medium">{music || "No music"}</span>
+            <span className="text-xs text-muted-foreground">Change →</span>
+          </button>
+        </div>
+
         {/* Filter picker */}
         <div>
           <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide block mb-2">✨ Nostalgic Filter</label>
@@ -178,6 +195,13 @@ export default function Post() {
           ))}
         </div>
       </div>
+      {showMusicPicker && (
+        <MusicPicker
+          selected={music}
+          onChange={setMusic}
+          onClose={() => setShowMusicPicker(false)}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, X, TrendingUp, Hash, Users } from "lucide-react";
+import { Search, X, TrendingUp, Hash, Users, Film } from "lucide-react";
+import ClassicVines from "@/components/ClassicVines";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 import { fmtN, getAvColor, getInitials } from "@/lib/utils";
@@ -19,6 +20,7 @@ const TABS = [
   { key: "top", label: "Top", Icon: TrendingUp },
   { key: "users", label: "People", Icon: Users },
   { key: "tags", label: "Tags", Icon: Hash },
+  { key: "vines", label: "Vines 🍇", Icon: Film },
 ];
 
 export default function Explore() {
@@ -166,6 +168,8 @@ export default function Explore() {
               ))}
             </div>
           </div>
+        ) : activeTab === "vines" ? (
+          <ClassicVines />
         ) : (
           <div className="grid grid-cols-3 gap-0.5">
             {filteredPosts.map(post => (
