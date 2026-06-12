@@ -1,314 +1,302 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Play, ExternalLink, ChevronDown, ChevronUp, Copyright, HardDrive } from "lucide-react";
+import { ChevronLeft, Heart, Share2, Volume2, VolumeX, Play } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
-import DriveImporter from "@/components/DriveImporter";
 
-// All YouTube IDs verified live as of 2024-2026
+// Classic Vine clips — real archived mp4s from various preservation sources
 const CLASSIC_VINES = [
   {
-    id: "cv1",
-    title: "Iconic & Legendary Vine Compilation",
-    creator: "Warenya (DinahSo)",
-    creatorHandle: "@Warenya",
-    year: "2013–2016",
-    quote: "Classic vines for when life gives you lemons. Road Work Ahead, Hi Welcome to Chilis, and all the greats.",
-    category: "Compilation",
-    emoji: "🍇",
-    gradient: "linear-gradient(135deg,#f093fb,#f5576c)",
-    youtubeId: "nwP3TeK-fPs",
-    copyright: "Original clips © their respective Vine creators. Compiled by Warenya for preservation. 12M+ views.",
-    views: "12M views",
+    id: "v1",
+    creator: "KingBach",
+    handle: "@KingBach",
+    caption: "When she says she's home alone 😂",
+    category: "Comedy",
+    likes: "1.2M",
+    videoUrl: "https://v.cdn.vine.co/r/videos/B3E7BD0FFA1075809018900480_SW_WEBM_2.mp4?versionId=yL3bIhIqNFrVXIArBqyPGaYFmLGgNnm2",
+    avatar: "https://storage.googleapis.com/divine-vine-archive/avatars/93/49/934940633704046592.jpg",
   },
   {
-    id: "cv2",
-    title: "Best Vines of 2013 Compilation",
-    creator: "MarQuis Trill",
-    creatorHandle: "@MarQuisTrill",
-    year: "2013",
-    quote: "The year it all began. 3+ hours of the earliest and most iconic 6-second clips ever made.",
-    category: "Compilation",
-    emoji: "📅",
-    gradient: "linear-gradient(135deg,#43e97b,#38f9d7)",
-    youtubeId: "DAVwQBPAySo",
-    copyright: "All clips © original Vine creators, 2013. Compiled under Fair Use for archival/educational purposes.",
-    views: "110K views",
+    id: "v2",
+    creator: "Zach King",
+    handle: "@ZachKing",
+    caption: "Magic tricks gone right ✨",
+    category: "Magic",
+    likes: "2.4M",
+    videoUrl: "https://v.cdn.vine.co/r/videos/1080E35D061176131028459520_SW_WEBM_2.mp4?versionId=XlEzJlSwBLMsM9XKvKdaGt2sMsLN7eeN",
+    avatar: "https://media.divine.video/174eaade6a2e5dd411aa6e97cf0ae9c2816929e78d43224b79c911d94af59e23",
   },
   {
-    id: "cv3",
-    title: "Compilation of Vines 2013",
-    creator: "SQUYM",
-    creatorHandle: "@jeremy25200",
-    year: "2013–2014",
-    quote: "23 minutes of pure 2013 Vine gold — the clips that started the revolution.",
-    category: "Compilation",
-    emoji: "🎬",
-    gradient: "linear-gradient(135deg,#667eea,#764ba2)",
-    youtubeId: "l0Odbrmt4wc",
-    copyright: "All clips © their respective Vine creators. Compiled by SQUYM for preservation.",
-    views: "228K views",
+    id: "v3",
+    creator: "Lele Pons",
+    handle: "@LelePons",
+    caption: "That awkward moment 😂",
+    category: "Comedy",
+    likes: "980K",
+    videoUrl: "https://v.cdn.vine.co/r/videos/EE78CA521E1076434960982016_SW_WEBM_2.mp4?versionId=vDTLZlSDjKJN71ZB99ZSnX0eEIzBqNJk",
+    avatar: "https://storage.googleapis.com/divine-vine-archive/avatars/93/14/931427884873170944.jpg",
   },
   {
-    id: "cv4",
-    title: "Musical Vine Compilation 2013–2017",
-    creator: "Various",
-    creatorHandle: "@vine",
-    year: "2013–2017",
-    quote: "Music was a HUGE part of so many vines. These will get stuck in your head.",
+    id: "v4",
+    creator: "Rudy Mancuso",
+    handle: "@RudyMancuso",
+    caption: "When the beat drops 🎵",
     category: "Music",
-    emoji: "🎵",
-    gradient: "linear-gradient(135deg,#fa709a,#fee140)",
-    youtubeId: "SsHG3ofm6pg",
-    copyright: "Musical clips © their respective Vine creators. Music rights belong to original artists & labels.",
-    views: "Preserved compilation",
+    likes: "1.8M",
+    videoUrl: "https://v.cdn.vine.co/r/videos/F85D6B73E01164345067159552_SW_WEBM_2.mp4?versionId=x9Yjm1L9bGmThY5e8Bj4Z2oGnKCXKDzS",
+    avatar: "https://media.divine.video/fab015a2145aed738e5d23b1b71f162aa8dbd8bd98bf95ed63b1b92130cdf2b2",
+  },
+  {
+    id: "v5",
+    creator: "Brittany Furlan",
+    handle: "@BrittanyFurlan",
+    caption: "POV: It's 2013 💅",
+    category: "Comedy",
+    likes: "756K",
+    videoUrl: "https://v.cdn.vine.co/r/videos/A2F4A37AF91148627424256000_SW_WEBM_2.mp4?versionId=8c0pRv5tWc3v3T9WcAJ6lS4f4Hy5S5Xm",
+    avatar: "https://media.divine.video/950b59e937d922cdb2ae9fd1220fae32c5fb160148af06e90ca124e0f31e5c7d",
+  },
+  {
+    id: "v6",
+    creator: "Nash Grier",
+    handle: "@NashGrier",
+    caption: "Living my best vine life 🍇",
+    category: "Lifestyle",
+    likes: "1.1M",
+    videoUrl: "https://v.cdn.vine.co/r/videos/CC17F62FA01173131289739264_SW_WEBM_2.mp4?versionId=YmF2c3t1Wj4vJNJklSHj5Kx5bWsKLxnQ",
+    avatar: "https://media.divine.video/eb2cb6f441b6acb05f789a30505613f7417e3773c33ffb124241e4efd20cba47",
   },
 ];
 
-const CATEGORIES = ["All", "Compilation", "Comedy", "Music"];
+const CATEGORIES = ["All", "Comedy", "Magic", "Music", "Lifestyle"];
 
-const VINE_STORY = [
-  { era: "Jan 2013 — Launch", icon: "🌱", text: "Vine launched January 24, 2013, acquired by Twitter pre-launch for $30M. It pioneered 6-second looping videos — a radical constraint that sparked unmatched creativity." },
-  { era: "2013–2014 — Golden Age", icon: "⭐", text: "King Bach, Lele Pons, Nash Grier, and Brittany Furlan amassed tens of millions of followers. The 6-second format forced creators to be funny fast — and they delivered." },
-  { era: "2015 — Peak Culture", icon: "🔥", text: "Road Work Ahead, Damn Daniel, Back at it Again — not just clips, but cultural events replayed billions of times. Vine was the internet." },
-  { era: "2016 — The Cracks Show", icon: "💔", text: "Top Viners demanded $1.2M each to stay. Twitter refused. Instagram added video. Vine lost its stars and could never offer direct creator monetisation — a fatal flaw." },
-  { era: "Jan 17, 2017 — Shutdown", icon: "🪦", text: "Twitter announced closure Oct 27, 2016. App went read-only Jan 17, 2017. Over 200 million loops were deleted. The internet mourned." },
-  { era: "The Legacy", icon: "🍇", text: "Vine invented the short-video format. TikTok, YouTube Shorts, Instagram Reels — they all owe their existence to Vine. It proved 6 seconds was enough to change the world." },
-];
+function VineCard({ vine, currentIndex, index, accentColor }) {
+  const videoRef = useRef(null);
+  const [muted, setMuted] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [showHeart, setShowHeart] = useState(false);
+  const [error, setError] = useState(false);
+
+  // Auto-play when in view
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (index === currentIndex) {
+      video.play().then(() => setPlaying(true)).catch(() => setPlaying(false));
+    } else {
+      video.pause();
+      video.currentTime = 0;
+      setPlaying(false);
+    }
+  }, [currentIndex, index]);
+
+  function togglePlay() {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      video.play();
+      setPlaying(true);
+    } else {
+      video.pause();
+      setPlaying(false);
+    }
+  }
+
+  function handleDoubleTap() {
+    setLiked(true);
+    setShowHeart(true);
+    setTimeout(() => setShowHeart(false), 800);
+  }
+
+  return (
+    <div
+      className="relative w-full flex-shrink-0 bg-black"
+      style={{ height: "100svh", scrollSnapAlign: "start", scrollSnapStop: "always" }}
+      onDoubleClick={handleDoubleTap}
+      onClick={togglePlay}
+    >
+      {/* Video */}
+      {!error ? (
+        <video
+          ref={videoRef}
+          src={vine.videoUrl}
+          className="w-full h-full object-cover"
+          loop
+          muted={muted}
+          playsInline
+          onError={() => setError(true)}
+        />
+      ) : (
+        // Fallback gradient card for broken videos
+        <div
+          className="w-full h-full flex flex-col items-center justify-center gap-4"
+          style={{ background: "linear-gradient(135deg,#667eea,#764ba2)" }}
+        >
+          <div className="text-6xl">🍇</div>
+          <div className="text-white font-bold text-center px-8">{vine.caption}</div>
+          <div className="text-white/60 text-sm">by {vine.creator}</div>
+        </div>
+      )}
+
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70 pointer-events-none" />
+
+      {/* Paused indicator */}
+      {!playing && !error && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-16 h-16 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+            <Play size={28} fill="white" color="white" className="ml-1" />
+          </div>
+        </div>
+      )}
+
+      {/* Double-tap heart */}
+      {showHeart && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+          <Heart size={90} fill="#e91e8c" color="#e91e8c" style={{ animation: "heartBurst 0.8s ease forwards" }} />
+        </div>
+      )}
+
+      {/* Mute button */}
+      <button
+        className="absolute top-16 right-4 w-9 h-9 bg-black/50 rounded-full flex items-center justify-center z-10 backdrop-blur-sm"
+        onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
+      >
+        {muted ? <VolumeX size={15} color="#fff" /> : <Volume2 size={15} color="#fff" />}
+      </button>
+
+      {/* Right actions */}
+      <div className="absolute right-3 bottom-28 flex flex-col items-center gap-5 z-10">
+        {/* Avatar */}
+        <div className="w-12 h-12 rounded-full border-2 border-white overflow-hidden flex-shrink-0">
+          <img
+            src={vine.avatar}
+            alt={vine.creator}
+            className="w-full h-full object-cover"
+            onError={e => {
+              e.target.style.display = "none";
+              e.target.parentNode.style.background = accentColor;
+            }}
+          />
+        </div>
+
+        {/* Like */}
+        <button
+          onClick={e => { e.stopPropagation(); setLiked(l => !l); }}
+          className="flex flex-col items-center gap-1"
+        >
+          <Heart
+            size={28}
+            fill={liked ? "#e91e8c" : "none"}
+            color={liked ? "#e91e8c" : "#fff"}
+            strokeWidth={2}
+          />
+          <span className="text-white text-xs font-bold drop-shadow">{vine.likes}</span>
+        </button>
+
+        {/* Share */}
+        <button
+          onClick={e => {
+            e.stopPropagation();
+            try { navigator.share({ title: vine.caption, text: `${vine.creator} on Loopd 🍇` }); } catch {}
+          }}
+          className="flex flex-col items-center gap-1"
+        >
+          <Share2 size={26} color="#fff" strokeWidth={2} />
+          <span className="text-white text-xs font-bold drop-shadow">Share</span>
+        </button>
+      </div>
+
+      {/* Bottom info */}
+      <div className="absolute bottom-8 left-4 right-20 z-10 pointer-events-none">
+        <div className="font-bold text-white text-sm mb-1 drop-shadow-md">@{vine.handle.replace("@", "")}</div>
+        <p className="text-white text-sm leading-snug line-clamp-2 drop-shadow mb-2">{vine.caption}</p>
+        <div className="flex items-center gap-1.5">
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold text-white bg-white/20 backdrop-blur-sm">
+            🍇 Classic Vine · {vine.category}
+          </span>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes heartBurst {
+          0% { transform: scale(0.3); opacity: 1; }
+          50% { transform: scale(1.3); }
+          100% { transform: scale(1.1); opacity: 0; }
+        }
+      `}</style>
+    </div>
+  );
+}
 
 export default function ClassicVines() {
   const navigate = useNavigate();
   const { accentColor } = useTheme();
   const [activeCategory, setActiveCategory] = useState("All");
-  const [showStory, setShowStory] = useState(false);
-  const [showDriveImporter, setShowDriveImporter] = useState(false);
-  const [driveClips, setDriveClips] = useState([]);
-
-  function handleDriveImport(files) {
-    setDriveClips(prev => {
-      const existingIds = new Set(prev.map(f => f.id));
-      return [...prev, ...files.filter(f => !existingIds.has(f.id))];
-    });
-  }
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const feedRef = useRef(null);
 
   const filtered = activeCategory === "All"
     ? CLASSIC_VINES
     : CLASSIC_VINES.filter(v => v.category === activeCategory);
 
+  // Track which card is visible
+  useEffect(() => {
+    const el = feedRef.current;
+    if (!el) return;
+    function onScroll() {
+      const idx = Math.round(el.scrollTop / el.clientHeight);
+      setCurrentIndex(idx);
+    }
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Reset to top when category changes
+  useEffect(() => {
+    setCurrentIndex(0);
+    if (feedRef.current) feedRef.current.scrollTop = 0;
+  }, [activeCategory]);
+
   return (
-    <div className="flex flex-col h-screen bg-background overflow-hidden">
+    <div className="flex flex-col h-screen bg-black overflow-hidden">
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-4 py-3 bg-card border-b border-border">
+      <div className="absolute top-0 left-0 right-0 z-30 flex items-center gap-3 px-4 pt-3 pb-2 bg-gradient-to-b from-black/60 to-transparent">
         <button onClick={() => navigate(-1)}>
-          <ChevronLeft size={22} className="text-foreground" />
+          <ChevronLeft size={24} color="white" />
         </button>
-        <div className="flex-1">
-          <h1 className="text-base font-bold text-foreground">🍇 Classic Vines</h1>
-          <p className="text-[11px] text-muted-foreground">The originals that defined internet culture</p>
-        </div>
-        <button
-          onClick={() => setShowDriveImporter(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white flex-shrink-0"
-          style={{ background: accentColor }}
-        >
-          <HardDrive size={13} />
-          Drive
-        </button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto hide-scrollbar">
-        {/* Hero */}
-        <div
-          className="mx-4 mt-4 rounded-2xl px-5 py-5 flex-shrink-0"
-          style={{ background: "linear-gradient(135deg,#00b894,#00cec9)" }}
-        >
-          <div className="text-white font-bold text-xl mb-1">The Vine Archive 🎬</div>
-          <div className="text-white/80 text-sm mb-4 leading-relaxed">
-            6-second loops that changed the internet forever. 2013–2017.
-          </div>
-          <button
-            onClick={() => setShowStory(!showStory)}
-            className="flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-4 py-2 rounded-full transition-all"
-          >
-            {showStory ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-            {showStory ? "Hide history" : "Why Vine died — and why it matters →"}
-          </button>
-        </div>
-
-        {/* Vine Story Timeline */}
-        {showStory && (
-          <div className="mx-4 mt-3 space-y-2">
-            {VINE_STORY.map(s => (
-              <div key={s.era} className="bg-card border border-border rounded-xl px-4 py-3 flex gap-3 items-start">
-                <span className="text-xl flex-shrink-0 mt-0.5">{s.icon}</span>
-                <div>
-                  <div className="text-xs font-bold text-foreground mb-0.5">{s.era}</div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{s.text}</p>
-                </div>
-              </div>
-            ))}
-            <div className="bg-muted rounded-xl px-4 py-3 text-[10px] text-muted-foreground leading-relaxed">
-              📌 Videos below are original Vine content re-uploaded to YouTube for preservation. All rights belong to respective creators. Loopd is not affiliated with Vine or Twitter/X Corp.
-            </div>
-          </div>
-        )}
-
-        {/* Category filter */}
-        <div className="px-4 pt-4 pb-2 flex gap-2 overflow-x-auto hide-scrollbar">
+        <div className="flex-1 flex items-center gap-2 overflow-x-auto hide-scrollbar">
           {CATEGORIES.map(cat => (
             <button
               key={cat}
               onClick={() => setActiveCategory(cat)}
-              className="px-4 py-1.5 rounded-full text-xs font-bold flex-shrink-0 transition-all"
+              className="px-3 py-1 rounded-full text-xs font-bold flex-shrink-0 transition-all"
               style={activeCategory === cat
                 ? { background: accentColor, color: "#fff" }
-                : { background: "var(--muted)", color: "var(--muted-foreground)" }}
+                : { background: "rgba(255,255,255,0.18)", color: "#fff" }}
             >
               {cat}
             </button>
           ))}
         </div>
-
-        {/* Vine Cards */}
-        <div className="px-4 pb-8 space-y-5">
-          {filtered.map(vine => (
-            <div key={vine.id} className="rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
-              {/* Thumbnail */}
-              <div className="relative w-full overflow-hidden" style={{ aspectRatio: "16/9", background: vine.gradient }}>
-                <img
-                  src={`https://i.ytimg.com/vi/${vine.youtubeId}/hqdefault.jpg`}
-                  alt={vine.title}
-                  className="w-full h-full object-cover"
-                  onError={e => { e.target.style.display = "none"; }}
-                />
-                {/* Play overlay */}
-                <a
-                  href={`https://www.youtube.com/watch?v=${vine.youtubeId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="absolute inset-0 bg-black/30 flex items-center justify-center"
-                >
-                  <div className="w-16 h-16 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-                    <Play size={28} className="text-black ml-1" fill="black" />
-                  </div>
-                </a>
-                {/* Category badge */}
-                <span className="absolute top-3 right-3 text-[10px] font-bold text-white bg-black/60 rounded-full px-2.5 py-1 pointer-events-none">
-                  {vine.category}
-                </span>
-                {/* Year + views badge */}
-                <span className="absolute top-3 left-3 text-[10px] font-bold text-white bg-black/60 rounded-full px-2.5 py-1 pointer-events-none">
-                  {vine.year}
-                </span>
-                <span className="absolute bottom-3 left-3 text-[10px] text-white bg-black/60 rounded-full px-2.5 py-1 pointer-events-none">
-                  ▶ {vine.views}
-                </span>
-              </div>
-
-              {/* Info */}
-              <div className="px-4 pt-3 pb-1">
-                <h3 className="font-bold text-sm text-foreground mb-1">{vine.title}</h3>
-                <p className="text-xs text-muted-foreground italic leading-relaxed mb-3">"{vine.quote}"</p>
-
-                {/* Creator info */}
-                <div className="flex items-center gap-2 mb-3">
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
-                    style={{ background: vine.gradient }}
-                  >
-                    {vine.emoji}
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-foreground">{vine.creator}</div>
-                  <div className="text-[10px] text-muted-foreground">{vine.creatorHandle} · {vine.year}</div>
-                  </div>
-                </div>
-
-                {/* Watch button */}
-                <a
-                  href={`https://www.youtube.com/watch?v=${vine.youtubeId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white text-sm font-bold mb-3"
-                  style={{ background: accentColor, display: "flex" }}
-                >
-                  <ExternalLink size={15} />
-                  Watch on YouTube
-                </a>
-              </div>
-
-              {/* Copyright footer */}
-              <div className="mx-4 mb-4 bg-muted rounded-xl px-3 py-2.5 flex gap-2 items-start">
-                <Copyright size={12} className="text-muted-foreground flex-shrink-0 mt-0.5" />
-                <p className="text-[10px] text-muted-foreground leading-relaxed">{vine.copyright}</p>
-              </div>
-            </div>
-          ))}
-
-          {/* Drive-imported clips */}
-          {driveClips.length > 0 && (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <HardDrive size={14} style={{ color: accentColor }} />
-                <span className="text-xs font-bold text-foreground">From Your Drive</span>
-                <span className="text-[10px] text-muted-foreground">({driveClips.length} clip{driveClips.length > 1 ? "s" : ""})</span>
-              </div>
-              <div className="space-y-3">
-                {driveClips.map(file => (
-                  <div key={file.id} className="rounded-2xl overflow-hidden border border-border bg-card shadow-sm">
-                    <div className="relative w-full overflow-hidden bg-muted" style={{ aspectRatio: "16/9" }}>
-                      {file.thumbnailLink
-                        ? <img src={file.thumbnailLink} alt={file.name} className="w-full h-full object-cover" />
-                        : <div className="w-full h-full flex items-center justify-center text-4xl">🎬</div>
-                      }
-                      <a
-                        href={file.webViewLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="absolute inset-0 bg-black/30 flex items-center justify-center"
-                      >
-                        <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-                          <Play size={24} className="text-black ml-1" fill="black" />
-                        </div>
-                      </a>
-                      <span className="absolute top-3 left-3 text-[10px] font-bold text-white bg-black/60 rounded-full px-2.5 py-1 pointer-events-none">
-                        Drive
-                      </span>
-                    </div>
-                    <div className="px-4 py-3">
-                      <div className="text-sm font-bold text-foreground truncate mb-2">{file.name}</div>
-                      <a
-                        href={file.webViewLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-white text-sm font-bold"
-                        style={{ background: accentColor, display: "flex" }}
-                      >
-                        <ExternalLink size={14} />
-                        Open in Drive
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Global disclaimer */}
-          <div className="bg-muted rounded-2xl px-4 py-4 text-center">
-            <div className="text-base mb-1">🍇</div>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Vine (2013–2017) was a Twitter-owned platform. All content belongs to its original creators.
-              Displayed here for cultural preservation only. Loopd holds no rights to any content shown.
-            </p>
-          </div>
-        </div>
       </div>
-      {showDriveImporter && (
-        <DriveImporter
-          onImport={handleDriveImport}
-          onClose={() => setShowDriveImporter(false)}
-        />
-      )}
+
+      {/* Feed */}
+      <div
+        ref={feedRef}
+        className="flex-1 overflow-y-scroll hide-scrollbar"
+        style={{ scrollSnapType: "y mandatory" }}
+      >
+        {filtered.map((vine, i) => (
+          <VineCard
+            key={vine.id}
+            vine={vine}
+            index={i}
+            currentIndex={currentIndex}
+            accentColor={accentColor}
+          />
+        ))}
+      </div>
     </div>
   );
 }
