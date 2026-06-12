@@ -10,6 +10,8 @@ export default function Privacy() {
   const [twoFA, setTwoFA] = useState(false);
   const [privateAcc, setPrivateAcc] = useState(false);
   const [show18, setShow18] = useState(false);
+  const [allowDownloads, setAllowDownloads] = useState(true);
+  const [allowDuets, setAllowDuets] = useState(true);
   const [showChangePw, setShowChangePw] = useState(false);
 
   return (
@@ -50,6 +52,8 @@ export default function Privacy() {
           {[
             { icon: "👁", bg: "#dbeeff", label: "Private Account", toggle: true, value: privateAcc, onToggle: () => setPrivateAcc(!privateAcc) },
             { icon: "🔞", bg: "#ffd6d6", label: "Show 18+ Content", toggle: true, value: show18, onToggle: () => setShow18(!show18) },
+            { icon: "⬇️", bg: "#d4f5e9", label: "Allow Downloads", sub: "Let others download your loops", toggle: true, value: allowDownloads, onToggle: () => setAllowDownloads(!allowDownloads) },
+            { icon: "🎵", bg: "#fff3cd", label: "Allow Duets", toggle: true, value: allowDuets, onToggle: () => setAllowDuets(!allowDuets) },
             { icon: "🚫", bg: "#ffd6d6", label: "Blocked Users", sub: "0 blocked", action: () => {}, arrow: true },
           ].map(item => (
             <div key={item.label} onClick={item.action} className="flex items-center gap-3 px-4 py-3.5 border-b border-border last:border-0 cursor-pointer">

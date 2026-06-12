@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 import { BG_CLASSES, EMOJIS } from "@/lib/constants";
+import { FilterPicker } from "@/components/VideoFilters";
 
 const BG_MAP = {
   bg1: "linear-gradient(135deg,#667eea,#764ba2)",
@@ -26,6 +27,8 @@ export default function Post() {
   const [isAdult, setIsAdult] = useState(false);
   const [allowComments, setAllowComments] = useState(true);
   const [visibility, setVisibility] = useState("public");
+  const [selectedFilter, setSelectedFilter] = useState("none");
+  const [allowDownloads, setAllowDownloads] = useState(true);
   const [loading, setLoading] = useState(false);
 
   async function publish() {
@@ -40,9 +43,11 @@ export default function Post() {
       tags,
       emoji,
       bg_class: bgClass,
+      filter: selectedFilter,
       video_url: videoUrl,
       is_adult: isAdult,
       allow_comments: allowComments,
+      allow_downloads: allowDownloads,
       visibility,
       is_draft: false,
       likes_count: 0,
@@ -147,10 +152,17 @@ export default function Post() {
           </div>
         </div>
 
+        {/* Filter picker */}
+        <div>
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide block mb-2">✨ Nostalgic Filter</label>
+          <FilterPicker selected={selectedFilter} onChange={setSelectedFilter} />
+        </div>
+
         {/* Toggles */}
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           {[
             { label: "Allow Comments", value: allowComments, set: setAllowComments },
+            { label: "Allow Downloads", value: allowDownloads, set: setAllowDownloads },
             { label: "18+ Content", value: isAdult, set: setIsAdult },
           ].map(item => (
             <div key={item.label} className="flex items-center justify-between px-4 py-3.5 border-b border-border last:border-0">

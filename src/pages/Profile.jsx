@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Settings, Edit3, Grid3X3, Heart } from "lucide-react";
+import { Settings, Edit3, Grid3X3, Heart, Bookmark } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 import { fmtN, getAvColor, getInitials } from "@/lib/utils";
+import FollowListModal from "@/components/FollowListModal";
+import SavedLoopsModal from "@/components/SavedLoopsModal";
 
 const BG_MAP = {
   bg1: "linear-gradient(135deg,#667eea,#764ba2)",
@@ -24,6 +26,9 @@ export default function Profile() {
   const [following, setFollowing] = useState(0);
   const [tab, setTab] = useState("loops");
   const [loading, setLoading] = useState(true);
+  const [showFollowers, setShowFollowers] = useState(false);
+  const [showFollowing, setShowFollowing] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(async u => {
@@ -49,7 +54,6 @@ export default function Profile() {
   const totalLikes = posts.reduce((sum, p) => sum + (p.likes_count || 0), 0);
   const username = user?.full_name || user?.email?.split("@")[0] || "User";
   const avColor = getAvColor(username);
-
   const displayPosts = tab === "loops" ? posts : likedPosts;
 
   return (
@@ -57,7 +61,10 @@ export default function Profile() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2 flex-shrink-0">
         <div className="text-lg font-bold text-foreground">@{user?.email?.split("@")[0] || "profile"}</div>
-        <div className="flex gap-2">
+        <div className="flex gap-1">
+          <button onClick={() => setShowSaved(true)} className="p-2">
+            <Bookmark size={20} className="text-foreground" />
+          </button>
           <button onClick={() => navigate("/settings")} className="p-2">
             <Settings size={20} className="text-foreground" />
           </button>
@@ -72,18 +79,29 @@ export default function Profile() {
             ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
             : getInitials(username)}
         </div>
-        <div className="flex gap-5">
-          {[
-            { label: "Loops", value: fmtN(posts.length) },
-            { label: "Followers", value: fmtN(followers) },
-            { label: "Following", value: fmtN(following) },
-            { label: "Likes", value: fmtN(totalLikes) },
-          ].map(stat => (
-            <div key={stat.label} className="flex flex-col items-center">
-              <span className="text-base font-bold text-foreground">{stat.value}</span>
-              <span className="text-xs text-muted-foreground">{stat.label}</span>
-            </div>
-          ))}
+        <div className="flex gap-4">
+          <div className="flex flex-col items-center">
+            <span className="text-base font-bold text-foreground">{fmtN(posts.length)}</span>
+            <span className="text-xs text-muted-foreground">Loops</span>
+          </div>
+          <button
+            className="flex flex-col items-center active:opacity-70"
+            onClick={() => user && setShowFollowers(true)}
+          >
+            <span className="text-base font-bold text-foreground">{fmtN(followers)}</span>
+            <span className="text-xs text-muted-foreground">Followers</span>
+          </button>
+          <button
+            className="flex flex-col items-center active:opacity-70"
+            onClick={() => user && setShowFollowing(true)}
+          >
+            <span className="text-base font-bold text-foreground">{fmtN(following)}</span>
+            <span className="text-xs text-muted-foreground">Following</span>
+          </button>
+          <div className="flex flex-col items-center">
+            <span className="text-base font-bold text-foreground">{fmtN(totalLikes)}</span>
+            <span className="text-xs text-muted-foreground">Likes</span>
+          </div>
         </div>
       </div>
 
@@ -93,7 +111,7 @@ export default function Profile() {
         {user?.bio && <div className="text-sm text-muted-foreground mt-0.5">{user.bio}</div>}
         <button
           onClick={() => navigate("/edit-profile")}
-          className="mt-2 w-full py-2 rounded-xl border border-border text-sm font-bold text-foreground flex items-center justify-center gap-2"
+          className="mt-2 w-full py-2.5 rounded-xl border border-border text-sm font-bold text-foreground flex items-center justify-center gap-2"
         >
           <Edit3 size={14} /> Edit Profile
         </button>
@@ -114,7 +132,7 @@ export default function Profile() {
               color: tab === key ? accentColor : "var(--muted-foreground)",
             }}
           >
-            <Icon size={16} />{label}
+            <Icon size={16} /> {label}
           </button>
         ))}
       </div>
@@ -132,11 +150,8 @@ export default function Profile() {
       ) : (
         <div className="grid grid-cols-3 gap-0.5">
           {displayPosts.map(post => (
-            <div
-              key={post.id}
-              className="aspect-[9/16] relative cursor-pointer overflow-hidden"
-              style={{ background: BG_MAP[post.bg_class] || BG_MAP.bg1 }}
-            >
+            <div key={post.id} className="aspect-[9/16] relative cursor-pointer overflow-hidden"
+              style={{ background: BG_MAP[post.bg_class] || BG_MAP.bg1 }}>
               {post.video_url
                 ? <video src={post.video_url} className="w-full h-full object-cover" muted />
                 : <div className="w-full h-full flex items-center justify-center text-3xl">{post.emoji || "🎬"}</div>
@@ -149,6 +164,14 @@ export default function Profile() {
           ))}
         </div>
       )}
+
+      {showFollowers && user && (
+        <FollowListModal userId={user.id} type="followers" onClose={() => setShowFollowers(false)} />
+      )}
+      {showFollowing && user && (
+        <FollowListModal userId={user.id} type="following" onClose={() => setShowFollowing(false)} />
+      )}
+      {showSaved && <SavedLoopsModal onClose={() => setShowSaved(false)} />}
     </div>
   );
 }

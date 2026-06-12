@@ -24,7 +24,8 @@
       "type": "string"
     },
     "filter": {
-      "type": "string"
+      "type": "string",
+      "default": "none"
     },
     "music": {
       "type": "string"
