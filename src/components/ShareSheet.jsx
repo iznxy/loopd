@@ -81,9 +81,12 @@ export default function ShareSheet({ post, onClose }) {
   }
 
   async function nativeShare() {
-    if (navigator.share) {
+    if (!navigator.share) return;
+    try {
       await navigator.share({ title: "Loopd", text: shareText, url: shareUrl });
       onClose();
+    } catch (e) {
+      // User dismissed or permission denied — silently ignore
     }
   }
 
