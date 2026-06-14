@@ -294,7 +294,8 @@ export default function ChatWindow() {
           disabled={recording}
         />
         <button
-          onClick={sendMessage}
+          type="button"
+          onClick={e => { e.stopPropagation(); sendMessage(); }}
           disabled={!text.trim()}
           className="w-9 h-9 rounded-full flex items-center justify-center text-white flex-shrink-0 transition-all"
           style={{ background: text.trim() ? accentColor : "var(--muted)" }}
