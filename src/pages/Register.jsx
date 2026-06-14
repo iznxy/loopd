@@ -48,11 +48,13 @@ export default function Register() {
       const result = await base44.auth.verifyOtp({ email, otpCode });
       if (result?.access_token) {
         base44.auth.setToken(result.access_token);
+        localStorage.setItem("loopd_new_user", "1");
+        setShowVineReel(true);
+      } else {
+        setError("Verification failed. Please try again.");
       }
-      localStorage.setItem("loopd_new_user", "1");
-      setShowVineReel(true);
     } catch (err) {
-      setError(err.message || "Invalid verification code");
+      setError("Invalid or expired verification code. Please try again.");
     } finally {
       setLoading(false);
     }
