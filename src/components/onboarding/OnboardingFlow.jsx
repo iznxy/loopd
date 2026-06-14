@@ -159,17 +159,18 @@ export default function OnboardingFlow({ onComplete }) {
             <div className="grid grid-cols-2 gap-2 max-h-72 overflow-y-auto hide-scrollbar pb-2">
               {ALL_LANGUAGES.map(l => (
                 <button
-                  key={l.code}
+                  key={l.lang}
+                  type="button"
                   onClick={() => setSelectedLang(l)}
                   className="flex items-center gap-2 px-3 py-3 rounded-2xl border-2 text-left transition-all"
                   style={{
-                    borderColor: selectedLang?.code === l.code ? accentColor : "rgba(255,255,255,0.1)",
-                    background: selectedLang?.code === l.code ? `${accentColor}20` : "rgba(255,255,255,0.05)",
+                    borderColor: selectedLang?.lang === l.lang ? accentColor : "rgba(255,255,255,0.1)",
+                    background: selectedLang?.lang === l.lang ? `${accentColor}20` : "rgba(255,255,255,0.05)",
                   }}
                 >
                   <span className="text-xl">{l.flag}</span>
                   <span className="text-white text-sm font-medium truncate">{l.lang}</span>
-                  {selectedLang?.code === l.code && <Check size={14} className="ml-auto flex-shrink-0" style={{ color: accentColor }} />}
+                  {selectedLang?.lang === l.lang && <Check size={14} className="ml-auto flex-shrink-0" style={{ color: accentColor }} />}
                 </button>
               ))}
             </div>
