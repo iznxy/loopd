@@ -25,5 +25,13 @@
     "from_user_id",
     "to_user_id",
     "amount"
-  ]
+  ],
+  "rls": {
+    "create": {
+      "data.from_user_id": "{{user.id}}"
+    },
+    "read": null,
+    "update": {},
+    "delete": {}
+  }
 }

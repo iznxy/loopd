@@ -15,5 +15,16 @@
   "required": [
     "post_id",
     "user_id"
-  ]
+  ],
+  "rls": {
+    "create": {},
+    "read": {},
+    "update": {},
+    "delete": {
+      "created_by_id": "{{user.id}}",
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
 }
