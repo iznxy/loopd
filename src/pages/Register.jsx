@@ -49,6 +49,7 @@ export default function Register() {
       if (result?.access_token) {
         base44.auth.setToken(result.access_token);
       }
+      localStorage.setItem("loopd_new_user", "1");
       setShowVineReel(true);
     } catch (err) {
       setError(err.message || "Invalid verification code");
@@ -71,6 +72,7 @@ export default function Register() {
   };
 
   const handleGoogle = () => {
+    localStorage.setItem("loopd_new_user", "1");
     base44.auth.loginWithProvider("google", "/");
   };
 

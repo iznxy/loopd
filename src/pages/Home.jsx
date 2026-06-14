@@ -10,6 +10,8 @@ import { getFilterStyle } from "@/components/VideoFilters";
 import SkeletonPost from "@/components/SkeletonPost";
 import StoriesRow from "@/components/StoriesRow";
 import { haptic } from "@/lib/haptics";
+import WelcomeVineReel from "@/components/onboarding/WelcomeVineReel";
+import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 
 const BG_MAP = {
   bg1: "linear-gradient(135deg,#667eea,#764ba2)",
@@ -249,6 +251,8 @@ export default function Home() {
   const { accentColor } = useTheme();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showVineReel, setShowVineReel] = useState(() => localStorage.getItem("loopd_new_user") === "1");
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [tab, setTab] = useState("foryou");
@@ -317,6 +321,18 @@ export default function Home() {
   const displayPosts = tab === "following"
     ? posts.filter(p => followingIds.has(p.user_id))
     : posts;
+
+  if (showVineReel) {
+    return <WelcomeVineReel onFinish={() => {
+      localStorage.removeItem("loopd_new_user");
+      setShowVineReel(false);
+      setShowOnboarding(true);
+    }} />;
+  }
+
+  if (showOnboarding) {
+    return <OnboardingFlow onComplete={() => setShowOnboarding(false)} />;
+  }
 
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
