@@ -32,6 +32,12 @@ export default function Login() {
     base44.auth.loginWithProvider("google", "/");
   };
 
+  const EMAIL_PROVIDERS = [
+    { name: "Gmail", icon: "https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg", url: "https://mail.google.com" },
+    { name: "iCloud", icon: "https://upload.wikimedia.org/wikipedia/commons/1/1b/Apple_logo_grey.svg", url: "https://www.icloud.com/mail" },
+    { name: "Outlook", icon: "https://upload.wikimedia.org/wikipedia/commons/d/df/Microsoft_Office_Outlook_%282018%E2%80%93present%29.svg", url: "https://outlook.live.com" },
+  ];
+
 
 
   return (
@@ -58,6 +64,22 @@ export default function Login() {
       </Button>
 
 
+
+      {/* Email provider shortcuts */}
+      <div className="flex gap-2 mb-5">
+        {EMAIL_PROVIDERS.map(p => (
+          <button
+            type="button"
+            key={p.name}
+            onClick={() => window.open(p.url, "_blank", "noopener,noreferrer")}
+            className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl border border-border hover:bg-muted transition-colors"
+            title={`Open ${p.name}`}
+          >
+            <img src={p.icon} alt={p.name} className="w-5 h-5 object-contain" />
+            <span className="text-[9px] text-muted-foreground font-medium">{p.name}</span>
+          </button>
+        ))}
+      </div>
 
       <div className="relative mb-6">
         <div className="absolute inset-0 flex items-center">
