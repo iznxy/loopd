@@ -28,6 +28,7 @@ export default function Settings() {
       items: [
         { icon: "🎨", bg: "#feeaff", color: "#892ba0", label: "Theme & Colors", sub: "Pick your style", action: () => setShowTheme(true) },
         { icon: "🌙", bg: "#e8e8e8", color: "#333", label: "Dark Mode", toggle: true, value: darkMode, onToggle: () => setDarkMode(!darkMode) },
+        { icon: "🍇", bg: "#e9d5ff", color: "#6b21a8", label: "Replay Intro", sub: "Watch the Vine nostalgia reel", action: () => { localStorage.setItem("loopd_new_user", "1"); window.location.href = "/"; } },
       ],
     },
     {
