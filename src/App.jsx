@@ -39,11 +39,59 @@ const AuthenticatedApp = () => {
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="text-3xl font-display" style={{ color: "#00c896" }}>Loopd</div>
-          <div className="w-7 h-7 border-4 border-muted border-t-primary rounded-full animate-spin" />
+      <div className="fixed inset-0 flex items-center justify-center bg-black overflow-hidden">
+        {/* Animated background rings */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          {[1, 2, 3].map(i => (
+            <div
+              key={i}
+              className="absolute rounded-full border border-[#00c896]/20"
+              style={{
+                width: `${i * 160}px`,
+                height: `${i * 160}px`,
+                animation: `splashRing ${1 + i * 0.3}s ease-out infinite`,
+                animationDelay: `${i * 0.2}s`,
+              }}
+            />
+          ))}
         </div>
+
+        {/* Logo */}
+        <div className="flex flex-col items-center gap-4 z-10" style={{ animation: "splashLogo 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards" }}>
+          <div
+            className="w-20 h-20 rounded-3xl flex items-center justify-center text-4xl font-bold text-white shadow-2xl"
+            style={{ background: "linear-gradient(135deg,#00c896,#00a8ff)", boxShadow: "0 0 40px rgba(0,200,150,0.5)" }}
+          >
+            ∞
+          </div>
+          <div className="text-white font-bold text-4xl tracking-tight" style={{ textShadow: "0 0 30px rgba(0,200,150,0.6)" }}>
+            Loopd
+          </div>
+          <div className="flex gap-1.5 mt-2">
+            {[0, 1, 2].map(i => (
+              <div
+                key={i}
+                className="w-2 h-2 rounded-full bg-[#00c896]"
+                style={{ animation: `dotBounce 0.9s ease-in-out infinite`, animationDelay: `${i * 0.15}s` }}
+              />
+            ))}
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes splashLogo {
+            from { opacity: 0; transform: scale(0.5); }
+            to   { opacity: 1; transform: scale(1); }
+          }
+          @keyframes splashRing {
+            0%   { transform: scale(0.6); opacity: 0.6; }
+            100% { transform: scale(1.4); opacity: 0; }
+          }
+          @keyframes dotBounce {
+            0%, 80%, 100% { transform: scale(1);   opacity: 0.5; }
+            40%            { transform: scale(1.5); opacity: 1; }
+          }
+        `}</style>
       </div>
     );
   }
