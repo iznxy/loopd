@@ -162,7 +162,7 @@ function PostCard({ post, currentUser, accentColor, onSaveChange }) {
       {/* Mute toggle */}
       {post.video_url && (
         <button
-          className="absolute top-14 right-4 w-9 h-9 bg-black/50 rounded-full flex items-center justify-center z-10 backdrop-blur-sm"
+          className="absolute top-14 left-4 w-9 h-9 bg-black/50 rounded-full flex items-center justify-center z-10 backdrop-blur-sm"
           onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
         >
           {muted ? <VolumeX size={15} color="#fff" /> : <Volume2 size={15} color="#fff" />}
@@ -170,50 +170,45 @@ function PostCard({ post, currentUser, accentColor, onSaveChange }) {
       )}
 
       {/* Right action bar */}
-      <div className="absolute right-3 bottom-28 flex flex-col items-center gap-5 z-10">
-        <button onClick={e => { e.stopPropagation(); handleLike(); }} className="flex flex-col items-center gap-1">
-          <div style={{ animation: liked ? "likePop 0.3s ease" : "none" }}>
-            <Heart size={28} fill={liked ? "#e91e8c" : "none"} color={liked ? "#e91e8c" : "#fff"} strokeWidth={2} />
-          </div>
-          <span className="text-white text-xs font-bold drop-shadow">{fmtN(likesCount)}</span>
-        </button>
-
-        <button onClick={e => { e.stopPropagation(); setShowComments(true); }} className="flex flex-col items-center gap-1">
-          <MessageCircle size={28} color="#fff" strokeWidth={2} />
-          <span className="text-white text-xs font-bold drop-shadow">{fmtN(post.comments_count || 0)}</span>
-        </button>
-
-        <button onClick={e => { e.stopPropagation(); handleSave(); }} className="flex flex-col items-center gap-1">
-          <Bookmark
-            size={28}
-            fill={saved ? "#fff" : "none"}
-            color="#fff"
-            strokeWidth={2}
-            style={{ animation: saved ? "savePop 0.3s ease" : "none" }}
-          />
-          <span className="text-white text-xs font-bold drop-shadow">{saved ? "Saved" : "Save"}</span>
-        </button>
-
-        <button onClick={e => { e.stopPropagation(); setShowShare(true); }} className="flex flex-col items-center gap-1">
-          <Share2 size={28} color="#fff" strokeWidth={2} />
-          <span className="text-white text-xs font-bold drop-shadow">Share</span>
-        </button>
-
-        {post.allow_downloads && post.video_url && (
-          <button onClick={e => { e.stopPropagation(); handleDownload(); }} className="flex flex-col items-center gap-1">
-            <Download size={24} color="#fff" strokeWidth={2} />
-            <span className="text-white text-xs font-bold drop-shadow">Save</span>
-          </button>
-        )}
-
+      <div className="absolute right-3 bottom-24 flex flex-col items-center gap-4 z-10" style={{ minWidth: 56 }}>
         {/* Spinning disc avatar */}
         <div
-          className="w-12 h-12 rounded-full border-2 border-white overflow-hidden flex items-center justify-center font-bold text-sm cursor-pointer"
-          style={{ background: avColor.bg, color: avColor.text, animation: "vinylSpin 3s linear infinite" }}
+          className="w-11 h-11 rounded-full border-2 border-white overflow-hidden flex items-center justify-center font-bold text-xs cursor-pointer mb-1"
+          style={{ background: avColor.bg, color: avColor.text, animation: post.video_url ? "vinylSpin 4s linear infinite" : "none" }}
           onClick={e => { e.stopPropagation(); navigate(`/creator/${username}`); }}
         >
           {getInitials(username)}
         </div>
+
+        <button onClick={e => { e.stopPropagation(); handleLike(); }} className="flex flex-col items-center gap-0.5">
+          <div style={{ animation: liked ? "likePop 0.3s ease" : "none" }}>
+            <Heart size={28} fill={liked ? "#e91e8c" : "none"} color={liked ? "#e91e8c" : "#fff"} strokeWidth={2} />
+          </div>
+          <span className="text-white text-[10px] font-bold drop-shadow">{fmtN(likesCount)}</span>
+        </button>
+
+        <button onClick={e => { e.stopPropagation(); setShowComments(true); }} className="flex flex-col items-center gap-0.5">
+          <MessageCircle size={28} color="#fff" strokeWidth={2} />
+          <span className="text-white text-[10px] font-bold drop-shadow">{fmtN(post.comments_count || 0)}</span>
+        </button>
+
+        <button onClick={e => { e.stopPropagation(); handleSave(); }} className="flex flex-col items-center gap-0.5">
+          <Bookmark size={28} fill={saved ? "#fff" : "none"} color="#fff" strokeWidth={2}
+            style={{ animation: saved ? "savePop 0.3s ease" : "none" }} />
+          <span className="text-white text-[10px] font-bold drop-shadow">{saved ? "Saved" : "Save"}</span>
+        </button>
+
+        <button onClick={e => { e.stopPropagation(); setShowShare(true); }} className="flex flex-col items-center gap-0.5">
+          <Share2 size={28} color="#fff" strokeWidth={2} />
+          <span className="text-white text-[10px] font-bold drop-shadow">Share</span>
+        </button>
+
+        {post.allow_downloads && post.video_url && (
+          <button onClick={e => { e.stopPropagation(); handleDownload(); }} className="flex flex-col items-center gap-0.5">
+            <Download size={24} color="#fff" strokeWidth={2} />
+            <span className="text-white text-[10px] font-bold drop-shadow">Save</span>
+          </button>
+        )}
       </div>
 
       {/* Bottom info */}
@@ -366,33 +361,51 @@ export default function Home() {
           <div className="text-sm opacity-60">Be the first to post!</div>
         </div>
       ) : (
-        <>
-          <StoriesRow currentUser={currentUser} />
+        <div
+          ref={feedRef}
+          className="w-full h-full overflow-y-scroll hide-scrollbar"
+          style={{ scrollSnapType: "y mandatory" }}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          {/* Stories row — snaps as first card */}
           <div
-            ref={feedRef}
-            className="w-full h-full overflow-y-scroll hide-scrollbar"
-            style={{ scrollSnapType: "y mandatory" }}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
+            className="relative w-full flex-shrink-0 bg-black"
+            style={{ height: "100svh", scrollSnapAlign: "start", scrollSnapStop: "always" }}
           >
-            {displayPosts.map(post => (
+            <div className="absolute inset-0 flex flex-col justify-end pb-24"
+              style={{ background: "linear-gradient(to bottom, #0a0a0a, #111)" }}>
+              {/* Loopd wordmark */}
+              <div className="flex flex-col items-center gap-2 mb-8">
+                <div className="text-5xl font-bold text-white" style={{ textShadow: `0 0 30px ${accentColor}` }}>∞</div>
+                <div className="text-2xl font-bold text-white tracking-tight">Loopd</div>
+                <div className="text-white/50 text-xs">Swipe up to start watching</div>
+              </div>
+              <StoriesRow currentUser={currentUser} />
+            </div>
+          </div>
+
+          {tab === "following" && displayPosts.length === 0 ? (
+            <div
+              className="relative w-full flex-shrink-0 flex flex-col items-center justify-center gap-3 text-white bg-black"
+              style={{ height: "100svh", scrollSnapAlign: "start" }}
+            >
+              <div className="text-5xl">👥</div>
+              <div className="text-lg font-bold">No loops yet</div>
+              <div className="text-sm opacity-60">Follow more creators to see their loops here</div>
+            </div>
+          ) : (
+            displayPosts.map(post => (
               <PostCard
                 key={post.id}
                 post={post}
                 currentUser={currentUser}
                 accentColor={accentColor}
               />
-            ))}
-            {tab === "following" && displayPosts.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full gap-3 text-white">
-                <div className="text-5xl">👥</div>
-                <div className="text-lg font-bold">No loops from people you follow</div>
-                <div className="text-sm opacity-60">Follow more creators to see their loops here</div>
-              </div>
-            )}
-          </div>
-        </>
+            ))
+          )}
+        </div>
       )}
 
       <style>{`

@@ -10,8 +10,7 @@ export default function StoriesRow({ currentUser }) {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
-    base44.entities.User.list("full_name", 15).then(all => {
-      // Show others first, then self at end
+    base44.entities.User.list("full_name", 12).then(all => {
       const others = all.filter(u => u.id !== currentUser?.id).slice(0, 10);
       setUsers(others);
     }).catch(() => {});
@@ -20,42 +19,40 @@ export default function StoriesRow({ currentUser }) {
   if (users.length === 0) return null;
 
   return (
-    <div className="absolute top-10 left-0 right-0 z-20 px-3 pt-1 pb-1">
-      <div className="flex gap-3 overflow-x-auto hide-scrollbar">
-        {users.map((u, i) => {
-          const name = u.full_name || u.email?.split("@")[0] || "user";
-          const avColor = getAvColor(name);
-          const isActive = i % 3 !== 2; // Simulate some online users
-          return (
-            <button
-              key={u.id}
-              onClick={() => navigate(`/creator/${u.email?.split("@")[0] || u.id}`)}
-              className="flex flex-col items-center gap-1 flex-shrink-0"
+    <div className="flex gap-3 overflow-x-auto hide-scrollbar px-3 py-2 flex-shrink-0">
+      {users.map((u, i) => {
+        const name = u.full_name || u.email?.split("@")[0] || "user";
+        const avColor = getAvColor(name);
+        const isActive = i % 3 !== 2;
+        return (
+          <button
+            key={u.id}
+            onClick={() => navigate(`/creator/${u.email?.split("@")[0] || u.id}`)}
+            className="flex flex-col items-center gap-1 flex-shrink-0"
+          >
+            <div
+              className="w-14 h-14 rounded-full p-0.5"
+              style={{
+                background: isActive
+                  ? `linear-gradient(135deg, ${accentColor}, #00a8ff)`
+                  : "rgba(255,255,255,0.2)",
+              }}
             >
               <div
-                className="w-12 h-12 rounded-full p-0.5"
-                style={{
-                  background: isActive
-                    ? `linear-gradient(135deg, ${accentColor}, #00a8ff)`
-                    : "rgba(255,255,255,0.2)",
-                }}
+                className="w-full h-full rounded-full flex items-center justify-center font-bold text-xs overflow-hidden border-2 border-black"
+                style={{ background: avColor.bg, color: avColor.text }}
               >
-                <div
-                  className="w-full h-full rounded-full flex items-center justify-center font-bold text-xs overflow-hidden border-2 border-black"
-                  style={{ background: avColor.bg, color: avColor.text }}
-                >
-                  {u.avatar_url
-                    ? <img src={u.avatar_url} alt="" className="w-full h-full object-cover" />
-                    : getInitials(name)}
-                </div>
+                {u.avatar_url
+                  ? <img src={u.avatar_url} alt="" className="w-full h-full object-cover" />
+                  : getInitials(name)}
               </div>
-              <span className="text-white text-[9px] font-medium drop-shadow max-w-[48px] truncate">
-                {name.split(" ")[0]}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+            </div>
+            <span className="text-white text-[9px] font-medium drop-shadow max-w-[56px] truncate">
+              {name.split(" ")[0]}
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }

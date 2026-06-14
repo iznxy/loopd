@@ -131,12 +131,12 @@ export default function Explore() {
             <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
               {TRENDING_TAGS.map(tag => (
                 <button
-                  key={tag}
-                  onClick={() => setQuery(tag)}
-                  className="px-3 py-1.5 rounded-full text-xs font-bold text-white flex-shrink-0"
-                  style={{ background: accentColor }}
+                key={tag}
+                onClick={() => setQuery(tag)}
+                className="px-3 py-1.5 rounded-full text-xs font-bold text-white flex-shrink-0"
+                style={{ background: accentColor }}
                 >
-                  #{tag}
+                {tag}
                 </button>
               ))}
             </div>
@@ -195,7 +195,7 @@ export default function Explore() {
                     #
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-foreground">#{tag}</div>
+                    <div className="text-sm font-bold text-foreground">{tag}</div>
                     <div className="text-xs text-muted-foreground">{(i + 1) * 123}K loops</div>
                   </div>
                 </button>
