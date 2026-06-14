@@ -115,6 +115,7 @@ const AuthenticatedApp = () => {
           <Route path="/" element={<Home />} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/earn" element={<Earn />} />
+          <Route path="/notifications" element={<Notifications />} />
           <Route path="/profile" element={<Profile />} />
         </Route>
         {/* Full-screen routes (no bottom nav) */}
@@ -122,7 +123,6 @@ const AuthenticatedApp = () => {
         <Route path="/post" element={<Post />} />
         <Route path="/messages" element={<Messages />} />
         <Route path="/chat/:conversationId" element={<ChatWindow />} />
-        <Route path="/notifications" element={<Notifications />} />
         <Route path="/creator/:username" element={<CreatorProfile />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/edit-profile" element={<EditProfile />} />
