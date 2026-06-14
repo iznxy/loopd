@@ -45,17 +45,18 @@ export default function Register() {
     setError("");
     setLoading(true);
     try {
-      const result = await base44.auth.verifyOtp({ email, otpCode });
-      if (result?.access_token) {
-        base44.auth.setToken(result.access_token);
-        localStorage.setItem("loopd_new_user", "1");
-        window.location.href = "/";
-      } else {
-        setError("Verification failed. Please try again.");
-      }
+      await base44.auth.verifyOtp({ email, otpCode });
+      // After OTP verified, log the user in to get a session token
+      await base44.auth.loginViaEmailPassword(email, password);
+      localStorage.setItem("loopd_new_user", "1");
+      window.location.href = "/";
     } catch (err) {
-      const msg = typeof err?.message === "string" ? err.message : null;
-      setError(msg && !msg.includes("{") ? msg : "Invalid or expired code. Please try again.");
+      const errType = err?.data?.error_type || "";
+      if (errType === "ObjectNotFoundError" || err?.status === 500) {
+        setError("Incorrect code. Please check your email and try again.");
+      } else {
+        setError(err?.message || "Verification failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
