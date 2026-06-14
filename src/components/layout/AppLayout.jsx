@@ -3,11 +3,13 @@ import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { Home, Search, PlusSquare, Bell, User, MessageCircle } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { accentColor } = useTheme();
+  const { t } = useLanguage();
   const [unreadNotifs, setUnreadNotifs] = useState(0);
 
   useEffect(() => {
@@ -20,12 +22,12 @@ export default function AppLayout() {
   }, [location.pathname]);
 
   const tabs = [
-    { path: "/", icon: Home, label: "Home" },
-    { path: "/explore", icon: Search, label: "Explore" },
-    { path: "/record", icon: PlusSquare, label: "Create" },
-    { path: "/messages", icon: MessageCircle, label: "Messages" },
-    { path: "/notifications", icon: Bell, label: "Alerts", badge: unreadNotifs },
-    { path: "/profile", icon: User, label: "Profile" },
+    { path: "/", icon: Home, label: t("nav_home") },
+    { path: "/explore", icon: Search, label: t("nav_explore") },
+    { path: "/record", icon: PlusSquare, label: t("nav_create") },
+    { path: "/messages", icon: MessageCircle, label: t("nav_messages") },
+    { path: "/notifications", icon: Bell, label: t("nav_notifications"), badge: unreadNotifs },
+    { path: "/profile", icon: User, label: t("nav_profile") },
   ];
 
   return (

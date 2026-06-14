@@ -4,11 +4,15 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 import ThemeModal from "@/components/modals/ThemeModal";
+import LanguageModal from "@/components/modals/LanguageModal";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function Settings() {
   const navigate = useNavigate();
   const { accentColor, darkMode, setDarkMode } = useTheme();
+  const { language, t } = useLanguage();
   const [showTheme, setShowTheme] = useState(false);
+  const [showLang, setShowLang] = useState(false);
 
   async function logout() {
     base44.auth.logout("/login");
@@ -16,33 +20,34 @@ export default function Settings() {
 
   const groups = [
     {
-      label: "Account",
+      label: t("account"),
       items: [
-        { icon: "👤", bg: "#d4f5e9", color: "#0a6b4f", label: "Edit Profile", sub: "Name, username, bio, photo", action: () => navigate("/profile") },
-        { icon: "🔒", bg: "#dbeeff", color: "#1560a0", label: "Privacy & Security", sub: "Password, 2FA, sessions", action: () => navigate("/privacy") },
-        { icon: "🔔", bg: "#fff3cd", color: "#8a6300", label: "Notifications", sub: "Likes, comments, tips, DMs", action: () => navigate("/notif-settings") },
+        { icon: "👤", bg: "#d4f5e9", color: "#0a6b4f", label: t("edit_profile"), sub: "Name, username, bio, photo", action: () => navigate("/profile") },
+        { icon: "🔒", bg: "#dbeeff", color: "#1560a0", label: t("privacy_security"), sub: "Password, 2FA, sessions", action: () => navigate("/privacy") },
+        { icon: "🔔", bg: "#fff3cd", color: "#8a6300", label: t("nav_notifications"), sub: "Likes, comments, tips, DMs", action: () => navigate("/notif-settings") },
       ],
     },
     {
-      label: "Appearance",
+      label: t("appearance"),
       items: [
-        { icon: "🎨", bg: "#feeaff", color: "#892ba0", label: "Theme & Colors", sub: "Pick your style", action: () => setShowTheme(true) },
-        { icon: "🌙", bg: "#e8e8e8", color: "#333", label: "Dark Mode", toggle: true, value: darkMode, onToggle: () => setDarkMode(!darkMode) },
-        { icon: "🍇", bg: "#e9d5ff", color: "#6b21a8", label: "Replay Intro", sub: "Watch the Vine nostalgia reel", action: () => { localStorage.setItem("loopd_new_user", "1"); window.location.href = "/"; } },
+        { icon: "🎨", bg: "#feeaff", color: "#892ba0", label: t("theme_colors"), sub: "Pick your style", action: () => setShowTheme(true) },
+        { icon: "🌙", bg: "#e8e8e8", color: "#333", label: t("dark_mode"), toggle: true, value: darkMode, onToggle: () => setDarkMode(!darkMode) },
+        { icon: "🌐", bg: "#dbeafe", color: "#1e40af", label: t("language"), sub: language, action: () => setShowLang(true) },
+        { icon: "🍇", bg: "#e9d5ff", color: "#6b21a8", label: t("replay_intro"), sub: "Watch the Vine nostalgia reel", action: () => { localStorage.setItem("loopd_new_user", "1"); window.location.href = "/"; } },
       ],
     },
     {
-      label: "Creator",
+      label: t("creator"),
       items: [
-        { icon: "💰", bg: "#fff3cd", color: "#8a6300", label: "Monetization", action: () => navigate("/earn") },
-        { icon: "📊", bg: "#d4f5e9", color: "#0a6b4f", label: "Analytics", action: () => navigate("/analytics") },
+        { icon: "💰", bg: "#fff3cd", color: "#8a6300", label: t("monetization"), action: () => navigate("/earn") },
+        { icon: "📊", bg: "#d4f5e9", color: "#0a6b4f", label: t("analytics"), action: () => navigate("/analytics") },
       ],
     },
     {
-      label: "Support",
+      label: t("support"),
       items: [
-        { icon: "❓", bg: "#dbeeff", color: "#1560a0", label: "Help & Support", action: () => navigate("/help") },
-        { icon: "🚪", bg: "#ffd6d6", color: "#a00", label: "Log Out", labelColor: "#f04e4e", action: logout },
+        { icon: "❓", bg: "#dbeeff", color: "#1560a0", label: t("help_support"), action: () => navigate("/help") },
+        { icon: "🚪", bg: "#ffd6d6", color: "#a00", label: t("log_out"), labelColor: "#f04e4e", action: logout },
       ],
     },
   ];
@@ -51,7 +56,7 @@ export default function Settings() {
     <div className="flex flex-col h-screen bg-background">
       <div className="flex items-center justify-between px-4 py-3 flex-shrink-0" style={{ background: accentColor }}>
         <button onClick={() => navigate(-1)}><ChevronLeft size={22} color="#fff" /></button>
-        <span className="text-base font-bold text-white">Settings</span>
+        <span className="text-base font-bold text-white">{t("settings")}</span>
         <div style={{ width: 22 }} />
       </div>
 
@@ -92,6 +97,7 @@ export default function Settings() {
       </div>
 
       {showTheme && <ThemeModal onClose={() => setShowTheme(false)} />}
+      {showLang && <LanguageModal onClose={() => setShowLang(false)} />}
     </div>
   );
 }

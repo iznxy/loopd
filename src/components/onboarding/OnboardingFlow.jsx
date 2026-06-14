@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { ChevronRight, Globe, User, Calendar, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 // Country -> language map (major countries)
 const COUNTRY_LANG = {
@@ -83,6 +84,7 @@ const STEPS = ["language", "gender", "dob"];
 
 export default function OnboardingFlow({ onComplete }) {
   const { accentColor } = useTheme();
+  const { setLanguage } = useLanguage();
   const [step, setStep] = useState(0);
   const [detectedLang, setDetectedLang] = useState(null);
   const [selectedLang, setSelectedLang] = useState(null);
@@ -114,10 +116,13 @@ export default function OnboardingFlow({ onComplete }) {
       : null;
     await base44.auth.updateMe({
       language: selectedLang?.code || "en",
+      language_name: selectedLang?.lang || "English",
       gender,
       date_of_birth: dobStr,
       onboarding_complete: true,
     }).catch(() => {});
+    // Apply the chosen language across the app (translates + caches)
+    await setLanguage(selectedLang?.lang || "English").catch(() => {});
     onComplete();
   }
 
