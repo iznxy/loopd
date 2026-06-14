@@ -32,9 +32,16 @@ export default function CreatorProfile() {
     base44.auth.me().then(async me => {
       setCurrentUser(me);
       const allUsers = await base44.entities.User.list("full_name", 100);
-      const found = allUsers.find(u =>
+      let found = allUsers.find(u =>
         u.email?.split("@")[0] === username || u.id === username
       );
+      // Also try matching by post username field (e.g. @DailyVines stored in Post.username)
+      if (!found) {
+        const matchingPosts = await base44.entities.Post.filter({ username });
+        if (matchingPosts.length > 0 && matchingPosts[0].user_id) {
+          found = allUsers.find(u => u.id === matchingPosts[0].user_id);
+        }
+      }
       if (!found) { setLoading(false); return; }
       setCreator(found);
       const [creatorPosts, followerList, followingList, myFollow] = await Promise.all([

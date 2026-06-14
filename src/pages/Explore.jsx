@@ -31,17 +31,43 @@ export default function Explore() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("top");
+  const [currentUser, setCurrentUser] = useState(null);
+  const [followingIds, setFollowingIds] = useState(new Set());
 
   useEffect(() => {
     Promise.all([
       base44.entities.Post.list("-views_count", 60),
       base44.entities.User.list("full_name", 30),
-    ]).then(([p, u]) => {
+      base44.auth.me(),
+    ]).then(async ([p, u, me]) => {
       setPosts(p.filter(x => !x.is_draft));
       setUsers(u);
+      setCurrentUser(me);
+      if (me) {
+        const follows = await base44.entities.Follow.filter({ follower_id: me.id });
+        setFollowingIds(new Set(follows.map(f => f.following_id)));
+      }
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
+
+  async function handleFollow(u) {
+    if (!currentUser) return;
+    const uname = u.full_name || u.email?.split("@")[0] || "user";
+    if (followingIds.has(u.id)) {
+      const follows = await base44.entities.Follow.filter({ follower_id: currentUser.id, following_id: u.id });
+      if (follows.length > 0) await base44.entities.Follow.delete(follows[0].id);
+      setFollowingIds(prev => { const s = new Set(prev); s.delete(u.id); return s; });
+    } else {
+      await base44.entities.Follow.create({
+        follower_id: currentUser.id,
+        follower_username: currentUser.email?.split("@")[0],
+        following_id: u.id,
+        following_username: u.email?.split("@")[0],
+      });
+      setFollowingIds(prev => new Set([...prev, u.id]));
+    }
+  }
 
   const filteredPosts = query
     ? posts.filter(p =>
@@ -141,9 +167,17 @@ export default function Explore() {
                     <div className="text-sm font-bold text-foreground">{u.full_name || uname}</div>
                     <div className="text-xs text-muted-foreground">@{u.email?.split("@")[0]}</div>
                   </div>
-                  <button className="px-4 py-1.5 rounded-full text-xs font-bold text-white" style={{ background: accentColor }}>
-                    Follow
-                  </button>
+                  {currentUser?.id !== u.id && (
+                    <button
+                      onClick={e => { e.stopPropagation(); handleFollow(u); }}
+                      className="px-4 py-1.5 rounded-full text-xs font-bold"
+                      style={followingIds.has(u.id)
+                        ? { border: "1.5px solid var(--border)", color: "var(--foreground)", background: "transparent" }
+                        : { background: accentColor, color: "#fff" }}
+                    >
+                      {followingIds.has(u.id) ? "Following" : "Follow"}
+                    </button>
+                  )}
                 </div>
               );
             })}
