@@ -1,73 +1,69 @@
 import React, { useState, useEffect } from "react";
 
-const VINE_MOMENTS = [
-  { emoji: "🌊", text: "What are those?!", color: "#1a1a2e", accent: "#e94560" },
-  { emoji: "🔥", text: "Do it for the Vine!", color: "#16213e", accent: "#f5a623" },
-  { emoji: "😂", text: "Road work ahead...", color: "#0f3460", accent: "#00d4ff" },
-  { emoji: "🎵", text: "I smell like beef 🐄", color: "#1a0a2e", accent: "#c471ed" },
-  { emoji: "✂️", text: "Goodbye!", color: "#0a2e1a", accent: "#00c896" },
-  { emoji: "💀", text: "RIP Vine 2013–2017", color: "#1a1a1a", accent: "#ffffff" },
+const VINES = [
+  { img: "https://media.base44.com/images/public/6a1f8dc06afda524efce29b2/1488bc7e6_generated_image.png", caption: "Caught in 4K 😂", handle: "@backyardbabe", accent: "#f5a623", year: 2014 },
+  { img: "https://media.base44.com/images/public/6a1f8dc06afda524efce29b2/b7198dc36_generated_image.png", caption: "Landed it first try 🛹🔥", handle: "@skate.gawd", accent: "#00d4ff", year: 2015 },
+  { img: "https://media.base44.com/images/public/6a1f8dc06afda524efce29b2/e9a85c880_generated_image.png", caption: "He's just a baby 🐶💕", handle: "@goodboydaily", accent: "#00c896", year: 2014 },
+  { img: "https://media.base44.com/images/public/6a1f8dc06afda524efce29b2/972a6f016_generated_image.png", caption: "POV: best night ever ✨", handle: "@thesquad", accent: "#c471ed", year: 2016 },
 ];
 
+const CLIP_MS = 1500;
+
 export default function WelcomeVineReel({ onFinish }) {
-  const [frameIdx, setFrameIdx] = useState(0);
+  const [idx, setIdx] = useState(0);
   const [phase, setPhase] = useState("reel"); // "reel" | "welcome"
-  const [fadeIn, setFadeIn] = useState(true);
+  const [fade, setFade] = useState(true);
 
   useEffect(() => {
     if (phase !== "reel") return;
-
-    const interval = setInterval(() => {
-      setFadeIn(false);
+    const t = setTimeout(() => {
+      setFade(false);
       setTimeout(() => {
-        setFrameIdx(prev => {
+        setIdx(prev => {
           const next = prev + 1;
-          if (next >= VINE_MOMENTS.length) {
-            clearInterval(interval);
+          if (next >= VINES.length) {
             setPhase("welcome");
             return prev;
           }
-          setFadeIn(true);
+          setFade(true);
           return next;
         });
-      }, 200);
-    }, 900);
+      }, 220);
+    }, CLIP_MS);
+    return () => clearTimeout(t);
+  }, [idx, phase]);
 
-    return () => clearInterval(interval);
-  }, [phase]);
-
-  // Welcome screen
   if (phase === "welcome") {
     return (
       <div
-        className="fixed inset-0 z-50 flex flex-col items-center justify-center"
-        style={{ background: "linear-gradient(180deg, #0a0a0a 0%, #001a12 60%, #0a0a0a 100%)" }}
+        className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden"
+        style={{ background: "radial-gradient(ellipse at 50% 30%, #06251c 0%, #050505 70%)" }}
       >
-        {[...Array(10)].map((_, i) => (
+        {/* Floating particles */}
+        {[...Array(14)].map((_, i) => (
           <div
             key={i}
             className="absolute rounded-full pointer-events-none"
             style={{
-              width: 3 + (i % 3),
-              height: 3 + (i % 3),
-              left: `${10 + i * 9}%`,
-              top: `${15 + (i * 7) % 70}%`,
+              width: 2 + (i % 4),
+              height: 2 + (i % 4),
+              left: `${(i * 13 + 5) % 95}%`,
+              top: `${(i * 17 + 8) % 88}%`,
               background: i % 2 === 0 ? "#00c896" : "#00a8ff",
-              opacity: 0.5,
-              animation: `floatUp ${3 + i * 0.4}s ease-in-out infinite`,
-              animationDelay: `${i * 0.3}s`,
+              opacity: 0.45,
+              animation: `vrFloat ${3.5 + (i % 4) * 0.6}s ease-in-out infinite`,
+              animationDelay: `${i * 0.25}s`,
             }}
           />
         ))}
 
-        <div className="text-center px-8 z-10" style={{ animation: "popIn 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards" }}>
-          <div className="text-5xl mb-2" style={{ animation: "wiggle 2s ease-in-out infinite" }}>🍇</div>
-          <div className="text-white/30 text-xs font-mono tracking-widest mb-8 uppercase">2013 – 2017 · Rest in loops</div>
+        <div className="text-center px-8 z-10" style={{ animation: "vrPopIn 0.7s cubic-bezier(0.34,1.56,0.64,1) forwards" }}>
+          <div className="text-white/30 text-[11px] font-mono tracking-[0.3em] mb-6 uppercase">2013 — 2017 · rest in loops</div>
 
           <div
-            className="text-8xl font-bold mb-4"
+            className="text-8xl font-bold mb-2 leading-none"
             style={{
-              background: "linear-gradient(135deg, #00c896, #00a8ff)",
+              background: "linear-gradient(135deg,#00c896,#00a8ff)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               filter: "drop-shadow(0 0 40px rgba(0,200,150,0.5))",
@@ -76,19 +72,19 @@ export default function WelcomeVineReel({ onFinish }) {
             ∞
           </div>
 
-          <div className="text-4xl font-bold text-white mb-3 tracking-tight" style={{ textShadow: "0 0 50px rgba(0,200,150,0.5)" }}>
+          <div className="text-[40px] font-bold text-white mb-3 tracking-tight leading-none" style={{ textShadow: "0 0 50px rgba(0,200,150,0.45)" }}>
             Welcome to Loopd
           </div>
-          <div className="text-white/50 text-sm mb-1">Where every moment loops forever.</div>
-          <div className="text-white/25 text-xs mb-10">For the Vine generation 🍇</div>
+          <div className="text-white/55 text-sm mb-1">Where every moment loops forever.</div>
+          <div className="text-white/30 text-xs mb-10">Built for the Vine generation 🍇</div>
 
           <button
             onClick={onFinish}
-            className="px-10 py-4 rounded-2xl text-white font-bold text-lg"
+            className="px-10 py-4 rounded-2xl text-white font-bold text-base active:scale-95 transition-transform"
             style={{
-              background: "linear-gradient(135deg, #00c896, #00a8ff)",
-              boxShadow: "0 0 40px rgba(0,200,150,0.35), 0 4px 20px rgba(0,0,0,0.4)",
-              animation: "glow 2.5s ease-in-out infinite",
+              background: "linear-gradient(135deg,#00c896,#00a8ff)",
+              boxShadow: "0 0 40px rgba(0,200,150,0.35),0 8px 24px rgba(0,0,0,0.45)",
+              animation: "vrGlow 2.5s ease-in-out infinite",
             }}
           >
             Start Looping 🚀
@@ -96,93 +92,116 @@ export default function WelcomeVineReel({ onFinish }) {
         </div>
 
         <style>{`
-          @keyframes popIn { from { opacity:0; transform:translateY(30px) scale(0.9); } to { opacity:1; transform:translateY(0) scale(1); } }
-          @keyframes wiggle { 0%,100% { transform:rotate(-8deg) scale(1); } 50% { transform:rotate(8deg) scale(1.15); } }
-          @keyframes floatUp { 0%,100% { transform:translateY(0); opacity:0.5; } 50% { transform:translateY(-18px); opacity:0.9; } }
-          @keyframes glow { 0%,100% { box-shadow:0 0 40px rgba(0,200,150,0.35),0 4px 20px rgba(0,0,0,0.4); } 50% { box-shadow:0 0 60px rgba(0,200,150,0.65),0 4px 20px rgba(0,0,0,0.4); } }
+          @keyframes vrPopIn { from { opacity:0; transform:translateY(28px) scale(0.94);} to { opacity:1; transform:translateY(0) scale(1);} }
+          @keyframes vrFloat { 0%,100% { transform:translateY(0); opacity:0.45;} 50% { transform:translateY(-16px); opacity:0.85;} }
+          @keyframes vrGlow { 0%,100% { box-shadow:0 0 40px rgba(0,200,150,0.35),0 8px 24px rgba(0,0,0,0.45);} 50% { box-shadow:0 0 64px rgba(0,200,150,0.6),0 8px 24px rgba(0,0,0,0.45);} }
         `}</style>
       </div>
     );
   }
 
-  const frame = VINE_MOMENTS[frameIdx];
+  const vine = VINES[idx];
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center transition-colors duration-300"
-      style={{ background: frame.color }}
-    >
-      {/* VHS scanlines */}
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black overflow-hidden">
+      {/* Blurred ambient backdrop from current image */}
       <div
-        className="absolute inset-0 pointer-events-none"
-        style={{ backgroundImage: "repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.08) 3px,rgba(0,0,0,0.08) 4px)" }}
+        className="absolute inset-0 transition-all duration-500"
+        style={{
+          backgroundImage: `url(${vine.img})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          filter: "blur(40px) brightness(0.4)",
+          transform: "scale(1.2)",
+        }}
       />
-      {/* Vignette */}
-      <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at center,transparent 50%,rgba(0,0,0,0.75) 100%)" }} />
+      <div className="absolute inset-0 bg-black/40" />
 
-      {/* REC badge */}
-      <div className="absolute top-10 left-5 z-20 flex items-center gap-2">
-        <div className="w-2.5 h-2.5 rounded-full bg-red-500" style={{ animation: "recBlink 1s step-start infinite" }} />
-        <span className="text-white/60 font-mono text-xs tracking-widest">REC · VINE ERA</span>
+      {/* Progress bars (Stories style) */}
+      <div className="absolute top-8 left-4 right-4 z-30 flex gap-1.5">
+        {VINES.map((_, i) => (
+          <div key={i} className="flex-1 h-1 rounded-full bg-white/25 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-white"
+              style={{
+                width: i < idx ? "100%" : i === idx ? "100%" : "0%",
+                transition: i === idx ? `width ${CLIP_MS}ms linear` : "none",
+                animation: i === idx ? `vrBar ${CLIP_MS}ms linear forwards` : "none",
+              }}
+            />
+          </div>
+        ))}
       </div>
 
-      {/* Skip */}
+      {/* REC badge */}
+      <div className="absolute top-12 left-5 z-30 flex items-center gap-2">
+        <div className="w-2 h-2 rounded-full bg-red-500" style={{ animation: "vrBlink 1s step-start infinite" }} />
+        <span className="text-white/70 font-mono text-[10px] tracking-[0.25em]">REC · VINE ERA</span>
+      </div>
+
       <button
         onClick={() => setPhase("welcome")}
-        className="absolute top-10 right-5 z-20 text-white/40 text-sm hover:text-white/70 transition-colors"
+        className="absolute top-11 right-5 z-30 text-white/55 text-sm hover:text-white transition-colors px-2 py-1"
       >
         Skip →
       </button>
 
-      {/* Frame counter */}
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
-        {VINE_MOMENTS.map((_, i) => (
-          <div
-            key={i}
-            className="h-0.5 rounded-full transition-all duration-300"
-            style={{ width: i === frameIdx ? 20 : 6, background: i <= frameIdx ? frame.accent : "rgba(255,255,255,0.2)" }}
-          />
-        ))}
-      </div>
-
-      {/* Main content */}
+      {/* Phone-style clip frame */}
       <div
-        className="flex flex-col items-center gap-6 px-8 text-center"
-        style={{ opacity: fadeIn ? 1 : 0, transform: fadeIn ? "scale(1)" : "scale(0.92)", transition: "opacity 0.2s, transform 0.2s" }}
+        className="relative z-20 rounded-[28px] overflow-hidden shadow-2xl"
+        style={{
+          width: "min(78vw, 320px)",
+          aspectRatio: "9/16",
+          border: "3px solid rgba(255,255,255,0.12)",
+          opacity: fade ? 1 : 0,
+          transform: fade ? "scale(1)" : "scale(0.96)",
+          transition: "opacity 0.22s, transform 0.22s",
+          boxShadow: `0 0 60px ${vine.accent}55, 0 20px 60px rgba(0,0,0,0.6)`,
+        }}
       >
-        <div className="text-[100px] leading-none" style={{ filter: `drop-shadow(0 0 30px ${frame.accent})` }}>
-          {frame.emoji}
-        </div>
+        {/* The "playing" clip with Ken Burns zoom */}
+        <img
+          src={vine.img}
+          alt=""
+          className="w-full h-full object-cover"
+          style={{ animation: "vrKenBurns 2s ease-out forwards" }}
+        />
+
+        {/* VHS scanlines */}
         <div
-          className="text-3xl font-black text-white leading-tight max-w-xs"
-          style={{ textShadow: `0 0 40px ${frame.accent}`, fontStyle: "italic" }}
-        >
-          "{frame.text}"
+          className="absolute inset-0 pointer-events-none"
+          style={{ backgroundImage: "repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.10) 3px,rgba(0,0,0,0.10) 4px)" }}
+        />
+        {/* Film grain */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-[0.07]"
+          style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")", backgroundSize: "120px" }}
+        />
+        {/* Vignette */}
+        <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,0.55) 100%)" }} />
+        {/* Bottom gradient + caption */}
+        <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/80 to-transparent">
+          <div className="text-white font-bold text-sm mb-0.5 drop-shadow">{vine.handle}</div>
+          <div className="text-white/90 text-[13px] leading-snug drop-shadow">{vine.caption}</div>
         </div>
-        <div className="text-xs font-mono tracking-widest" style={{ color: frame.accent }}>
-          VINE · {2013 + frameIdx}
+        {/* Loop badge */}
+        <div className="absolute top-3 right-3 flex items-center gap-1 bg-black/45 backdrop-blur-sm rounded-full px-2.5 py-1">
+          <span style={{ color: vine.accent }} className="text-xs">∞</span>
+          <span className="text-white/80 text-[10px] font-bold">{vine.year}</span>
         </div>
       </div>
 
-      {/* Bottom progress bar */}
-      <div className="absolute bottom-10 left-8 right-8 z-20">
-        <div className="w-full h-0.5 bg-white/15 rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full"
-            style={{
-              background: frame.accent,
-              width: `${((frameIdx + 1) / VINE_MOMENTS.length) * 100}%`,
-              transition: "width 0.9s linear",
-            }}
-          />
-        </div>
-        <div className="text-center text-white/30 text-[10px] font-mono mt-2 tracking-widest">
-          {frameIdx + 1} / {VINE_MOMENTS.length}
+      {/* Caption strip under frame */}
+      <div className="relative z-20 mt-6 text-center" style={{ opacity: fade ? 1 : 0, transition: "opacity 0.22s" }}>
+        <div className="text-white/40 text-[10px] font-mono tracking-[0.3em] uppercase">
+          loop {idx + 1} of {VINES.length}
         </div>
       </div>
 
       <style>{`
-        @keyframes recBlink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+        @keyframes vrBlink { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+        @keyframes vrBar { from { width:0%;} to { width:100%;} }
+        @keyframes vrKenBurns { from { transform:scale(1.0);} to { transform:scale(1.12);} }
       `}</style>
     </div>
   );
