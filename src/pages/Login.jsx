@@ -68,16 +68,17 @@ export default function Login() {
       {/* Email provider shortcuts */}
       <div className="flex gap-2 mb-5">
         {EMAIL_PROVIDERS.map(p => (
-          <button
-            type="button"
+          <a
             key={p.name}
-            onClick={() => window.open(p.url, "_blank", "noopener,noreferrer")}
+            href={p.url}
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex-1 flex flex-col items-center gap-1 py-2 rounded-xl border border-border hover:bg-muted transition-colors"
             title={`Open ${p.name}`}
           >
             <img src={p.icon} alt={p.name} className="w-5 h-5 object-contain" />
             <span className="text-[9px] text-muted-foreground font-medium">{p.name}</span>
-          </button>
+          </a>
         ))}
       </div>
 
