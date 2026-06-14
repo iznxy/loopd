@@ -139,8 +139,10 @@ export default function Profile() {
 
       {/* Grid */}
       {loading ? (
-        <div className="flex justify-center py-12">
-          <div className="w-7 h-7 border-4 border-muted border-t-primary rounded-full animate-spin" />
+        <div className="grid grid-cols-3 gap-0.5 animate-pulse">
+          {[1,2,3,4,5,6].map(i => (
+            <div key={i} className="aspect-[9/16] bg-muted rounded-sm" />
+          ))}
         </div>
       ) : displayPosts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-muted-foreground text-sm gap-2">

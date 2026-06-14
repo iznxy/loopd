@@ -7,6 +7,9 @@ import { fmtN, getAvColor, getInitials } from "@/lib/utils";
 import CommentsPanel from "@/components/CommentsPanel";
 import ShareSheet from "@/components/ShareSheet";
 import { getFilterStyle } from "@/components/VideoFilters";
+import SkeletonPost from "@/components/SkeletonPost";
+import StoriesRow from "@/components/StoriesRow";
+import { haptic } from "@/lib/haptics";
 
 const BG_MAP = {
   bg1: "linear-gradient(135deg,#667eea,#764ba2)",
@@ -52,18 +55,19 @@ function PostCard({ post, currentUser, accentColor, onSaveChange }) {
 
   async function handleLike() {
     if (!currentUser) return;
+    haptic("light");
     if (liked) {
-      const likes = await base44.entities.Like.filter({ post_id: post.id, user_id: currentUser.id });
-      if (likes.length > 0) await base44.entities.Like.delete(likes[0].id);
       setLiked(false);
       setLikesCount(c => Math.max(0, c - 1));
+      const likes = await base44.entities.Like.filter({ post_id: post.id, user_id: currentUser.id });
+      if (likes.length > 0) await base44.entities.Like.delete(likes[0].id);
       await base44.entities.Post.update(post.id, { likes_count: Math.max(0, (post.likes_count || 0) - 1) });
     } else {
-      await base44.entities.Like.create({ post_id: post.id, user_id: currentUser.id, username: currentUser.email?.split("@")[0] });
       setLiked(true);
       setLikesCount(c => c + 1);
+      haptic("success");
+      await base44.entities.Like.create({ post_id: post.id, user_id: currentUser.id, username: currentUser.email?.split("@")[0] });
       await base44.entities.Post.update(post.id, { likes_count: (post.likes_count || 0) + 1 });
-      // Create notification
       if (post.user_id && post.user_id !== currentUser.id) {
         base44.entities.Notification.create({
           user_id: post.user_id,
@@ -78,13 +82,14 @@ function PostCard({ post, currentUser, accentColor, onSaveChange }) {
 
   async function handleSave() {
     if (!currentUser) return;
+    haptic("medium");
     if (saved) {
+      setSaved(false);
       const saves = await base44.entities.SavedLoop.filter({ post_id: post.id, user_id: currentUser.id });
       if (saves.length > 0) await base44.entities.SavedLoop.delete(saves[0].id);
-      setSaved(false);
     } else {
-      await base44.entities.SavedLoop.create({ post_id: post.id, user_id: currentUser.id });
       setSaved(true);
+      await base44.entities.SavedLoop.create({ post_id: post.id, user_id: currentUser.id });
     }
     onSaveChange?.();
   }
@@ -252,11 +257,12 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [tab, setTab] = useState("foryou");
+  const [followingIds, setFollowingIds] = useState(new Set());
   const feedRef = useRef(null);
   const pullStartY = useRef(null);
   const [pullDistance, setPullDistance] = useState(0);
 
-  async function loadPosts(user) {
+  async function loadPosts() {
     const data = await base44.entities.Post.filter({ is_draft: false }, "-created_date", 30);
     setPosts(data);
     return data;
@@ -264,9 +270,13 @@ export default function Home() {
 
   useEffect(() => {
     Promise.all([base44.auth.me(), base44.entities.Post.filter({ is_draft: false }, "-created_date", 30)])
-      .then(([user, data]) => {
+      .then(async ([user, data]) => {
         setCurrentUser(user);
         setPosts(data);
+        if (user) {
+          const follows = await base44.entities.Follow.filter({ follower_id: user.id });
+          setFollowingIds(new Set(follows.map(f => f.following_id)));
+        }
         setLoading(false);
       }).catch(() => setLoading(false));
 
@@ -301,7 +311,7 @@ export default function Home() {
       setRefreshing(true);
       setPullDistance(0);
       pullStartY.current = null;
-      await loadPosts(currentUser);
+      await loadPosts();
       setRefreshing(false);
     } else {
       setPullDistance(0);
@@ -309,9 +319,9 @@ export default function Home() {
     }
   }
 
-  const displayPosts = tab === "foryou"
-    ? posts
-    : posts; // Following filter would require follow data; shows all for now
+  const displayPosts = tab === "following"
+    ? posts.filter(p => followingIds.has(p.user_id))
+    : posts;
 
   return (
     <div className="relative w-full h-full bg-black overflow-hidden">
@@ -346,11 +356,8 @@ export default function Home() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center h-full">
-          <div className="flex flex-col items-center gap-3">
-            <div className="text-3xl font-bold text-white" style={{ textShadow: "0 0 20px #00c896" }}>Loopd</div>
-            <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin" />
-          </div>
+        <div className="w-full h-full overflow-hidden">
+          <SkeletonPost />
         </div>
       ) : displayPosts.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-full gap-3 text-white">
@@ -359,23 +366,33 @@ export default function Home() {
           <div className="text-sm opacity-60">Be the first to post!</div>
         </div>
       ) : (
-        <div
-          ref={feedRef}
-          className="w-full h-full overflow-y-scroll hide-scrollbar"
-          style={{ scrollSnapType: "y mandatory" }}
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-        >
-          {displayPosts.map(post => (
-            <PostCard
-              key={post.id}
-              post={post}
-              currentUser={currentUser}
-              accentColor={accentColor}
-            />
-          ))}
-        </div>
+        <>
+          <StoriesRow currentUser={currentUser} />
+          <div
+            ref={feedRef}
+            className="w-full h-full overflow-y-scroll hide-scrollbar"
+            style={{ scrollSnapType: "y mandatory" }}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
+            {displayPosts.map(post => (
+              <PostCard
+                key={post.id}
+                post={post}
+                currentUser={currentUser}
+                accentColor={accentColor}
+              />
+            ))}
+            {tab === "following" && displayPosts.length === 0 && (
+              <div className="flex flex-col items-center justify-center h-full gap-3 text-white">
+                <div className="text-5xl">👥</div>
+                <div className="text-lg font-bold">No loops from people you follow</div>
+                <div className="text-sm opacity-60">Follow more creators to see their loops here</div>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
       <style>{`

@@ -25,7 +25,17 @@ export default function Notifications() {
     base44.auth.me().then(user => {
       setCurrentUser(user);
       base44.entities.Notification.filter({ user_id: user.id }, "-created_date", 50)
-        .then(data => { setNotifs(data); setLoading(false); })
+        .then(async data => {
+          setNotifs(data);
+          setLoading(false);
+          // Auto-mark all as read after a short delay
+          const unread = data.filter(n => !n.is_read);
+          if (unread.length > 0) {
+            await new Promise(r => setTimeout(r, 1500));
+            await Promise.all(unread.map(n => base44.entities.Notification.update(n.id, { is_read: true })));
+            setNotifs(prev => prev.map(n => ({ ...n, is_read: true })));
+          }
+        })
         .catch(() => setLoading(false));
     }).catch(() => setLoading(false));
   }, []);
@@ -94,8 +104,17 @@ export default function Notifications() {
 
       <div className="flex-1 overflow-y-auto hide-scrollbar">
         {loading ? (
-          <div className="flex justify-center py-16">
-            <div className="w-7 h-7 border-4 border-muted border-t-primary rounded-full animate-spin" />
+          <div className="divide-y divide-border">
+            {[1,2,3,4,5].map(i => (
+              <div key={i} className="flex items-center gap-3 px-4 py-3.5 animate-pulse">
+                <div className="w-11 h-11 rounded-full bg-muted flex-shrink-0" />
+                <div className="flex-1 flex flex-col gap-2">
+                  <div className="w-2/3 h-3 rounded-full bg-muted" />
+                  <div className="w-1/2 h-3 rounded-full bg-muted" />
+                </div>
+                <div className="w-8 h-2 rounded-full bg-muted" />
+              </div>
+            ))}
           </div>
         ) : notifs.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground text-sm">No notifications yet</div>
