@@ -1,18 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
+const ARCHIVE_ID = "clean_vines_for_the_children_of_jesus";
+const buildUrl = (file) => `https://archive.org/download/${ARCHIVE_ID}/${encodeURIComponent(file)}`;
+
+// Real Vine clips streamed from archive.org, with a generated still as fallback
 const VINES = [
-  { img: "https://media.base44.com/images/public/6a1f8dc06afda524efce29b2/1488bc7e6_generated_image.png", caption: "Caught in 4K 😂", handle: "@backyardbabe", accent: "#f5a623", year: 2014 },
-  { img: "https://media.base44.com/images/public/6a1f8dc06afda524efce29b2/b7198dc36_generated_image.png", caption: "Landed it first try 🛹🔥", handle: "@skate.gawd", accent: "#00d4ff", year: 2015 },
-  { img: "https://media.base44.com/images/public/6a1f8dc06afda524efce29b2/e9a85c880_generated_image.png", caption: "He's just a baby 🐶💕", handle: "@goodboydaily", accent: "#00c896", year: 2014 },
-  { img: "https://media.base44.com/images/public/6a1f8dc06afda524efce29b2/972a6f016_generated_image.png", caption: "POV: best night ever ✨", handle: "@thesquad", accent: "#c471ed", year: 2016 },
+  { file: "Anything for you Beyonce [3927939 views \u2022 20131027] - by Best Vines - KY_nkn5ShfM.mp4", img: "https://media.base44.com/images/public/6a1f8dc06afda524efce29b2/1488bc7e6_generated_image.png", caption: "Anything for you Beyoncé 💁", handle: "@bestvines", accent: "#f5a623", year: 2013 },
+  { file: "Ball Goes Under Treadmill! [5959609 views \u2022 20150305] - by PoohProductions - x1lICBhp_W8.mp4", img: "https://media.base44.com/images/public/6a1f8dc06afda524efce29b2/b7198dc36_generated_image.png", caption: "Ball goes under treadmill! 🛹🔥", handle: "@poohproductions", accent: "#00d4ff", year: 2015 },
+  { file: "'Baby It's You' - Vine [16036764 views \u2022 20140613] - by Nene Rawrs - 2IVw0Hx_i_E.mp4", img: "https://media.base44.com/images/public/6a1f8dc06afda524efce29b2/e9a85c880_generated_image.png", caption: "Baby it's you 🐶💕", handle: "@nenerawrs", accent: "#00c896", year: 2014 },
+  { file: "Annie Are You Ok [23441736 views \u2022 20160401] - by Ratamamhata kanishka - NR1zHdFN8A4.mp4", img: "https://media.base44.com/images/public/6a1f8dc06afda524efce29b2/972a6f016_generated_image.png", caption: "Annie are you ok? ✨", handle: "@kanishka", accent: "#c471ed", year: 2016 },
 ];
 
-const CLIP_MS = 1500;
+const CLIP_MS = 3200;
 
 export default function WelcomeVineReel({ onFinish }) {
   const [idx, setIdx] = useState(0);
   const [phase, setPhase] = useState("reel"); // "reel" | "welcome"
   const [fade, setFade] = useState(true);
+  const [videoFailed, setVideoFailed] = useState(false);
+  const videoRef = useRef(null);
 
   useEffect(() => {
     if (phase !== "reel") return;
@@ -25,13 +31,19 @@ export default function WelcomeVineReel({ onFinish }) {
             setPhase("welcome");
             return prev;
           }
+          setVideoFailed(false);
           setFade(true);
           return next;
         });
-      }, 220);
+      }, 260);
     }, CLIP_MS);
     return () => clearTimeout(t);
   }, [idx, phase]);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (v) { v.currentTime = 0; v.play().catch(() => {}); }
+  }, [idx]);
 
   if (phase === "welcome") {
     return (
@@ -159,13 +171,26 @@ export default function WelcomeVineReel({ onFinish }) {
           boxShadow: `0 0 60px ${vine.accent}55, 0 20px 60px rgba(0,0,0,0.6)`,
         }}
       >
-        {/* The "playing" clip with Ken Burns zoom */}
-        <img
-          src={vine.img}
-          alt=""
-          className="w-full h-full object-cover"
-          style={{ animation: "vrKenBurns 2s ease-out forwards" }}
-        />
+        {/* The "playing" clip — real Vine video, image fallback on error */}
+        {!videoFailed ? (
+          <video
+            ref={videoRef}
+            src={buildUrl(vine.file)}
+            className="w-full h-full object-cover bg-black"
+            autoPlay
+            loop
+            muted
+            playsInline
+            onError={() => setVideoFailed(true)}
+          />
+        ) : (
+          <img
+            src={vine.img}
+            alt=""
+            className="w-full h-full object-cover"
+            style={{ animation: "vrKenBurns 3.2s ease-out forwards" }}
+          />
+        )}
 
         {/* VHS scanlines */}
         <div
