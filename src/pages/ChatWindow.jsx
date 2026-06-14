@@ -97,9 +97,8 @@ export default function ChatWindow() {
     setRecording(false);
   }
 
-  async function handleGifSelect(gif) {
+  async function handleGifSelect(gifUrl) {
     setShowGif(false);
-    const gifUrl = gif.images?.fixed_height?.url || gif.images?.original?.url;
     await sendMessage({ text: gifUrl, message_type: "gif" });
   }
 
