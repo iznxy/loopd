@@ -49,12 +49,13 @@ export default function Register() {
       if (result?.access_token) {
         base44.auth.setToken(result.access_token);
         localStorage.setItem("loopd_new_user", "1");
-        setShowVineReel(true);
+        window.location.href = "/";
       } else {
         setError("Verification failed. Please try again.");
       }
     } catch (err) {
-      setError("Invalid or expired verification code. Please try again.");
+      const msg = typeof err?.message === "string" ? err.message : null;
+      setError(msg && !msg.includes("{") ? msg : "Invalid or expired code. Please try again.");
     } finally {
       setLoading(false);
     }
