@@ -1,16 +1,18 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 
 export const VIDEO_FILTERS = [
-  { id: "none", label: "Original", style: {} },
-  { id: "vintage", label: "Vintage", style: { filter: "sepia(0.6) contrast(1.1) brightness(0.9) saturate(0.8)" } },
-  { id: "retro", label: "Retro", style: { filter: "sepia(0.4) hue-rotate(-20deg) saturate(1.4) contrast(1.2)" } },
-  { id: "film", label: "Film", style: { filter: "contrast(1.15) brightness(0.92) saturate(0.85) sepia(0.2)" } },
-  { id: "warm", label: "Warm", style: { filter: "sepia(0.3) saturate(1.4) brightness(1.05) hue-rotate(-10deg)" } },
-  { id: "cool", label: "Cool", style: { filter: "saturate(0.9) hue-rotate(20deg) brightness(1.05) contrast(1.05)" } },
-  { id: "noir", label: "Noir", style: { filter: "grayscale(1) contrast(1.3) brightness(0.85)" } },
-  { id: "dreamy", label: "Dreamy", style: { filter: "blur(0.3px) brightness(1.1) saturate(1.2) contrast(0.95)" } },
-  { id: "golden", label: "Golden", style: { filter: "sepia(0.5) saturate(1.6) brightness(1.1) hue-rotate(-15deg)" } },
-  { id: "fade", label: "Fade", style: { filter: "opacity(0.9) brightness(1.08) saturate(0.7) contrast(0.95)" } },
+  { id: "none",      label: "Original",   emoji: "✨", style: {} },
+  { id: "golden",    label: "Golden Hour", emoji: "🌅", style: { filter: "sepia(0.45) saturate(1.7) brightness(1.1) hue-rotate(-12deg)" } },
+  { id: "dreamy",    label: "Dreamy",     emoji: "🌸", style: { filter: "blur(0.4px) brightness(1.15) saturate(1.3) contrast(0.92) hue-rotate(5deg)" } },
+  { id: "noir",      label: "Noir",       emoji: "🖤", style: { filter: "grayscale(1) contrast(1.35) brightness(0.82)" } },
+  { id: "neon",      label: "Neon Glow",  emoji: "💜", style: { filter: "saturate(2.2) contrast(1.3) brightness(1.05) hue-rotate(15deg)" } },
+  { id: "vintage",   label: "Vintage",    emoji: "📼", style: { filter: "sepia(0.65) contrast(1.1) brightness(0.88) saturate(0.75)" } },
+  { id: "cinematic", label: "Cinematic",  emoji: "🎬", style: { filter: "contrast(1.2) saturate(0.85) brightness(0.93)" } },
+  { id: "cool",      label: "Ice Blue",   emoji: "🧊", style: { filter: "saturate(0.8) hue-rotate(25deg) brightness(1.08) contrast(1.08)" } },
+  { id: "warm",      label: "Sunset",     emoji: "🔥", style: { filter: "sepia(0.28) saturate(1.5) brightness(1.07) hue-rotate(-8deg)" } },
+  { id: "fade",      label: "Fade",       emoji: "🌫️", style: { filter: "brightness(1.12) contrast(0.82) saturate(0.65)" } },
+  { id: "vivid",     label: "Vivid Pop",  emoji: "🌈", style: { filter: "saturate(1.9) contrast(1.18) brightness(1.03)" } },
+  { id: "matte",     label: "Matte",      emoji: "🤍", style: { filter: "contrast(0.88) brightness(1.1) saturate(0.72)" } },
 ];
 
 export function getFilterStyle(filterId) {
@@ -18,29 +20,64 @@ export function getFilterStyle(filterId) {
   return f ? f.style : {};
 }
 
-export function FilterPicker({ selected, onChange }) {
+// Swipe-left/right filter picker like Instagram/TikTok
+export function FilterPicker({ selected, onChange, previewSrc }) {
+  const containerRef = useRef(null);
+  const [dragging, setDragging] = useState(false);
+  const dragStartX = useRef(null);
+
+  const selectedIdx = VIDEO_FILTERS.findIndex(f => f.id === selected);
+
+  function handleTouchStart(e) {
+    dragStartX.current = e.touches[0].clientX;
+  }
+  function handleTouchEnd(e) {
+    if (dragStartX.current === null) return;
+    const diff = dragStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 30) {
+      const dir = diff > 0 ? 1 : -1;
+      const next = Math.max(0, Math.min(VIDEO_FILTERS.length - 1, selectedIdx + dir));
+      onChange(VIDEO_FILTERS[next].id);
+    }
+    dragStartX.current = null;
+  }
+
   return (
-    <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-1">
-      {VIDEO_FILTERS.map(f => (
-        <button
-          key={f.id}
-          onClick={() => onChange(f.id)}
-          className="flex flex-col items-center gap-1.5 flex-shrink-0"
-        >
-          <div
-            className="w-14 h-14 rounded-xl overflow-hidden border-2 transition-all"
-            style={{
-              borderColor: selected === f.id ? "#00c896" : "transparent",
-              background: "linear-gradient(135deg,#667eea,#764ba2)",
-            }}
+    <div
+      ref={containerRef}
+      className="flex items-end gap-4 overflow-x-auto hide-scrollbar px-4 pb-1"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      style={{ scrollSnapType: "x mandatory" }}
+    >
+      {VIDEO_FILTERS.map((f, i) => {
+        const isSelected = f.id === selected;
+        return (
+          <button
+            key={f.id}
+            onClick={() => onChange(f.id)}
+            className="flex flex-col items-center gap-1.5 flex-shrink-0 transition-all"
+            style={{ scrollSnapAlign: "center", opacity: isSelected ? 1 : 0.55, transform: isSelected ? "scale(1.12)" : "scale(1)" }}
           >
-            <div className="w-full h-full flex items-center justify-center text-2xl" style={f.style}>
-              🎬
+            <div
+              className="rounded-xl overflow-hidden border-2 transition-all"
+              style={{
+                width: isSelected ? 64 : 54,
+                height: isSelected ? 64 : 54,
+                borderColor: isSelected ? "#fff" : "transparent",
+                background: "linear-gradient(135deg,#667eea,#764ba2)",
+                boxShadow: isSelected ? "0 0 12px rgba(255,255,255,0.4)" : "none",
+              }}
+            >
+              {previewSrc
+                ? <img src={previewSrc} alt="" className="w-full h-full object-cover" style={f.style} />
+                : <div className="w-full h-full flex items-center justify-center text-2xl" style={f.style}>{f.emoji}</div>
+              }
             </div>
-          </div>
-          <span className="text-[10px] text-muted-foreground font-medium">{f.label}</span>
-        </button>
-      ))}
+            <span className="text-white text-[9px] font-semibold drop-shadow leading-tight text-center max-w-[64px]">{f.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

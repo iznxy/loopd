@@ -9,6 +9,8 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 import { toast } from "@/components/ui/use-toast";
+import WelcomeVineReel from "@/components/onboarding/WelcomeVineReel";
+import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -18,6 +20,8 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
+  const [showVineReel, setShowVineReel] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,7 +49,7 @@ export default function Register() {
       if (result?.access_token) {
         base44.auth.setToken(result.access_token);
       }
-      window.location.href = "/";
+      setShowVineReel(true);
     } catch (err) {
       setError(err.message || "Invalid verification code");
     } finally {
@@ -69,6 +73,14 @@ export default function Register() {
   const handleGoogle = () => {
     base44.auth.loginWithProvider("google", "/");
   };
+
+  if (showVineReel) {
+    return <WelcomeVineReel onFinish={() => { setShowVineReel(false); setShowOnboarding(true); }} />;
+  }
+
+  if (showOnboarding) {
+    return <OnboardingFlow onComplete={() => { window.location.href = "/"; }} />;
+  }
 
   if (showOtp) {
     return (

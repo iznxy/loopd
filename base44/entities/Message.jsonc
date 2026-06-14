@@ -24,7 +24,8 @@
       "type": "string",
       "enum": [
         "text",
-        "voice"
+        "voice",
+        "gif"
       ],
       "default": "text"
     },

@@ -12,6 +12,8 @@ export default function EditProfile() {
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
+  const [gender, setGender] = useState("");
+  const [dob, setDob] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -22,12 +24,14 @@ export default function EditProfile() {
       setDisplayName(u.full_name || "");
       setUsername(u.username || u.email?.split("@")[0] || "");
       setBio(u.bio || "");
+      setGender(u.gender || "");
+      setDob(u.date_of_birth || "");
     });
   }, []);
 
   async function save() {
     setSaving(true);
-    await base44.auth.updateMe({ username, bio });
+    await base44.auth.updateMe({ username, bio, gender, date_of_birth: dob });
     setSaving(false);
     setSaved(true);
     setTimeout(() => { setSaved(false); navigate("/profile"); }, 1000);
@@ -106,6 +110,47 @@ export default function EditProfile() {
               className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none resize-none h-24"
             />
             <p className="text-[11px] text-muted-foreground mt-1 text-right">{bio.length}/150</p>
+          </div>
+
+          <div>
+            <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide block mb-1.5">
+              Gender
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { id: "male", label: "👨 Male" },
+                { id: "female", label: "👩 Female" },
+                { id: "nonbinary", label: "🧑 Non-binary" },
+                { id: "prefer_not", label: "🤐 Prefer not to say" },
+              ].map(g => (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => setGender(g.id)}
+                  className="py-2.5 px-3 rounded-xl border text-sm font-medium text-left transition-all"
+                  style={{
+                    borderColor: gender === g.id ? accentColor : "var(--border)",
+                    background: gender === g.id ? `${accentColor}15` : "var(--muted)",
+                    color: gender === g.id ? accentColor : "var(--foreground)",
+                  }}
+                >
+                  {g.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wide block mb-1.5">
+              Date of Birth
+            </label>
+            <input
+              type="date"
+              value={dob}
+              onChange={e => setDob(e.target.value)}
+              max="2012-12-31"
+              className="w-full bg-muted border border-border rounded-xl px-4 py-3 text-sm text-foreground outline-none"
+            />
           </div>
 
           <div>
