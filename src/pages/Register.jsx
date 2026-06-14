@@ -22,6 +22,7 @@ export default function Register() {
   const [otpCode, setOtpCode] = useState("");
   const [showVineReel, setShowVineReel] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [pendingApproval, setPendingApproval] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,8 +33,13 @@ export default function Register() {
     }
     setLoading(true);
     try {
-      await base44.auth.register({ email, password });
-      setShowOtp(true);
+      const result = await base44.auth.register({ email, password });
+      // Private apps return a pending access request instead of sending an OTP code
+      if (result?.status === "pending" || result?.access_request_created) {
+        setPendingApproval(true);
+      } else {
+        setShowOtp(true);
+      }
     } catch (err) {
       setError(err.message || "Registration failed");
     } finally {
@@ -86,6 +92,34 @@ export default function Register() {
 
   if (showOnboarding) {
     return <OnboardingFlow onComplete={() => { window.location.href = "/"; }} />;
+  }
+
+  if (pendingApproval) {
+    return (
+      <AuthLayout
+        icon={Mail}
+        title="Request sent"
+        subtitle="Your account is awaiting approval"
+        footer={
+          <>
+            Already approved?{" "}
+            <Link to="/login" className="text-primary font-medium hover:underline">
+              Log in
+            </Link>
+          </>
+        }
+      >
+        <div className="text-center space-y-4">
+          <div className="p-4 rounded-xl bg-muted text-sm text-muted-foreground leading-relaxed">
+            Thanks for signing up! This app is invite-only, so an admin needs to approve your request.
+            You'll receive an email at <span className="font-medium text-foreground">{email}</span> once you're approved.
+          </div>
+          <Button className="w-full h-12 font-medium" onClick={() => { window.location.href = "/login"; }}>
+            Back to login
+          </Button>
+        </div>
+      </AuthLayout>
+    );
   }
 
   if (showOtp) {
