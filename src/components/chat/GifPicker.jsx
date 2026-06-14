@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Search, X } from "lucide-react";
-
-const GIPHY_KEY = "dc6zaTOxFJmzC"; // Public beta key for demo
+import { base44 } from "@/api/base44Client";
 
 export default function GifPicker({ onSelect, onClose }) {
   const [query, setQuery] = useState("");
@@ -10,24 +9,21 @@ export default function GifPicker({ onSelect, onClose }) {
   const debounceRef = useRef(null);
 
   useEffect(() => {
-    fetchGifs("trending");
-  }, []);
-
-  useEffect(() => {
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchGifs(query || "trending");
+      fetchGifs(query);
     }, 400);
+    return () => clearTimeout(debounceRef.current);
   }, [query]);
 
   async function fetchGifs(q) {
     setLoading(true);
-    const endpoint = q === "trending"
-      ? `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_KEY}&limit=24&rating=g`
-      : `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(q)}&limit=24&rating=g`;
-    const res = await fetch(endpoint);
-    const data = await res.json();
-    setGifs(data.data || []);
+    try {
+      const res = await base44.functions.invoke("giphy", { query: q });
+      setGifs(res?.data?.gifs || []);
+    } catch {
+      setGifs([]);
+    }
     setLoading(false);
   }
 
@@ -49,16 +45,18 @@ export default function GifPicker({ onSelect, onClose }) {
           <div className="flex items-center justify-center py-10">
             <div className="w-6 h-6 border-2 border-muted border-t-primary rounded-full animate-spin" />
           </div>
+        ) : gifs.length === 0 ? (
+          <div className="text-center text-xs text-muted-foreground py-10">No GIFs found</div>
         ) : (
           <div className="grid grid-cols-3 gap-0.5 p-1">
             {gifs.map(gif => (
               <button
                 key={gif.id}
-                onClick={() => onSelect(gif.images.fixed_height.url)}
+                onClick={() => onSelect(gif.full)}
                 className="aspect-square overflow-hidden rounded-lg hover:opacity-80 transition-opacity"
               >
                 <img
-                  src={gif.images.fixed_height_small.url}
+                  src={gif.preview}
                   alt={gif.title}
                   className="w-full h-full object-cover"
                   loading="lazy"
