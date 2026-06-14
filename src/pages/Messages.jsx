@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Search, Edit } from "lucide-react";
+import { ChevronLeft, Search, Edit, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 import { timeAgo, getAvColor, getInitials } from "@/lib/utils";
@@ -13,6 +13,8 @@ export default function Messages() {
   const [users, setUsers] = useState([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showNewMsg, setShowNewMsg] = useState(false);
+  const [userSearch, setUserSearch] = useState("");
 
   useEffect(() => {
     base44.auth.me().then(async user => {
@@ -57,7 +59,7 @@ export default function Messages() {
       <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card flex-shrink-0">
         <button onClick={() => navigate("/")}><ChevronLeft size={22} className="text-foreground" /></button>
         <span className="flex-1 text-base font-bold text-foreground">Messages</span>
-        <button className="p-1"><Edit size={18} className="text-foreground" /></button>
+        <button className="p-1" onClick={() => { setShowNewMsg(true); setUserSearch(""); }}><Edit size={18} className="text-foreground" /></button>
       </div>
 
       <div className="px-4 py-2 bg-card border-b border-border flex-shrink-0">
@@ -114,6 +116,62 @@ export default function Messages() {
           })
         )}
       </div>
+      {/* New Message Modal */}
+      {showNewMsg && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-background">
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card flex-shrink-0">
+            <button onClick={() => setShowNewMsg(false)}><X size={22} className="text-foreground" /></button>
+            <span className="flex-1 text-base font-bold text-foreground">New Message</span>
+          </div>
+          <div className="px-4 py-2 border-b border-border flex-shrink-0">
+            <div className="flex items-center gap-2 bg-muted rounded-xl px-3 py-2">
+              <Search size={14} className="text-muted-foreground" />
+              <input
+                autoFocus
+                value={userSearch}
+                onChange={e => setUserSearch(e.target.value)}
+                placeholder="Search people…"
+                className="flex-1 bg-transparent text-sm text-foreground outline-none"
+              />
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto hide-scrollbar">
+            {users
+              .filter(u => u.id !== currentUser?.id)
+              .filter(u => {
+                const name = u.full_name || u.email?.split("@")[0] || "";
+                return name.toLowerCase().includes(userSearch.toLowerCase());
+              })
+              .map(u => {
+                const name = u.full_name || u.email?.split("@")[0] || "User";
+                const avColor = getAvColor(name);
+                return (
+                  <div
+                    key={u.id}
+                    onClick={() => {
+                      const convId = [currentUser.id, u.id].sort().join("_");
+                      setShowNewMsg(false);
+                      navigate(`/chat/${convId}`);
+                    }}
+                    className="flex items-center gap-3 px-4 py-3.5 border-b border-border cursor-pointer active:bg-muted/50"
+                  >
+                    <div className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
+                      style={{ background: avColor.bg, color: avColor.text }}>
+                      {getInitials(name)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-foreground">{name}</div>
+                      {u.email && <div className="text-xs text-muted-foreground truncate">{u.email}</div>}
+                    </div>
+                  </div>
+                );
+              })}
+            {users.filter(u => u.id !== currentUser?.id).length === 0 && (
+              <div className="text-center py-16 text-muted-foreground text-sm">No users found</div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
