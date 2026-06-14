@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { Home, Search, PlusSquare, Bell, User, MessageCircle } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
@@ -42,9 +42,9 @@ export default function AppLayout() {
         {tabs.map(({ path, icon: Icon, label, badge }) => {
           const active = location.pathname === path;
           return (
-            <button
+            <Link
               key={path}
-              onClick={() => navigate(path)}
+              to={path}
               className="flex flex-col items-center justify-center gap-0.5 px-3 py-2 relative"
             >
               <div className="relative">
@@ -68,7 +68,7 @@ export default function AppLayout() {
               >
                 {label}
               </span>
-            </button>
+            </Link>
           );
         })}
       </nav>
