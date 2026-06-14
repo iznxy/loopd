@@ -159,7 +159,12 @@ export default function ChatWindow() {
               {msg.message_type === "voice" && msg.audio_url ? (
                 <audio controls src={msg.audio_url} className="max-w-[220px] rounded-xl" />
               ) : msg.message_type === "gif" && msg.text ? (
-                <img src={msg.text} alt="GIF" className="max-w-[200px] rounded-2xl" />
+                <img
+                  src={msg.text}
+                  alt="GIF"
+                  className="w-[200px] rounded-2xl bg-muted"
+                  style={{ minHeight: 120, objectFit: "contain" }}
+                />
               ) : (
                 <div
                   className="max-w-[72%] px-4 py-2.5 rounded-2xl text-sm"
