@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, SwitchCamera } from "lucide-react";
+import { X, SwitchCamera, Image } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 import { VIDEO_FILTERS, getFilterStyle } from "@/components/VideoFilters";
@@ -19,6 +19,15 @@ export default function Record() {
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("none");
+  const fileInputRef = useRef(null);
+
+  async function handleGalleryUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    navigate("/post", { state: { video_url: file_url, filter: selectedFilter } });
+  }
 
   useEffect(() => {
     startCamera();
@@ -90,9 +99,15 @@ export default function Record() {
           <X size={20} color="#fff" />
         </button>
         <div className="text-white text-sm font-bold bg-black/40 px-3 py-1 rounded-full">6s Loop</div>
-        <button onClick={() => setFacingMode(f => f === "user" ? "environment" : "user")} className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center">
-          <SwitchCamera size={20} color="#fff" />
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => fileInputRef.current?.click()} className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center">
+            <Image size={20} color="#fff" />
+          </button>
+          <button onClick={() => setFacingMode(f => f === "user" ? "environment" : "user")} className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center">
+            <SwitchCamera size={20} color="#fff" />
+          </button>
+        </div>
+        <input ref={fileInputRef} type="file" accept="video/*" className="hidden" onChange={handleGalleryUpload} />
       </div>
 
       {/* Error */}
