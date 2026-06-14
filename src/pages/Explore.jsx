@@ -4,6 +4,7 @@ import { Search, X, TrendingUp, Hash, Users, Film } from "lucide-react";
 
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { fmtN, getAvColor, getInitials } from "@/lib/utils";
 import { TRENDING_TAGS } from "@/lib/constants";
 
@@ -16,16 +17,17 @@ const BG_MAP = {
   bg6: "linear-gradient(135deg,#a18cd1,#fbc2eb)",
 };
 
-const TABS = [
-  { key: "top", label: "Top", Icon: TrendingUp },
-  { key: "users", label: "People", Icon: Users },
-  { key: "tags", label: "Tags", Icon: Hash },
-  { key: "vines", label: "Vines 🍇", Icon: Film },
-];
-
 export default function Explore() {
   const navigate = useNavigate();
   const { accentColor } = useTheme();
+  const { t } = useLanguage();
+
+  const TABS = [
+    { key: "top", label: t("tab_top"), Icon: TrendingUp },
+    { key: "users", label: t("tab_people"), Icon: Users },
+    { key: "tags", label: t("tab_tags"), Icon: Hash },
+    { key: "vines", label: "Vines 🍇", Icon: Film },
+  ];
   const [query, setQuery] = useState("");
   const [posts, setPosts] = useState([]);
   const [users, setUsers] = useState([]);
@@ -93,7 +95,7 @@ export default function Explore() {
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Search loops, people, tags…"
+            placeholder={t("search_placeholder")}
             className="flex-1 bg-transparent text-sm text-foreground outline-none"
           />
           {query && (
@@ -126,7 +128,7 @@ export default function Explore() {
         {!query && activeTab === "top" && (
           <div className="px-4 py-3 border-b border-border">
             <div className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1">
-              <TrendingUp size={11} /> Trending Now
+              <TrendingUp size={11} /> {t("trending_now")}
             </div>
             <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
               {TRENDING_TAGS.map(tag => (
@@ -150,7 +152,7 @@ export default function Explore() {
         ) : activeTab === "users" ? (
           <div className="divide-y divide-border">
             {filteredUsers.length === 0 ? (
-              <div className="py-16 text-center text-sm text-muted-foreground">No users found</div>
+              <div className="py-16 text-center text-sm text-muted-foreground">{t("no_users_found")}</div>
             ) : filteredUsers.map(u => {
               const uname = u.full_name || u.email?.split("@")[0] || "user";
               const avColor = getAvColor(uname);
@@ -175,7 +177,7 @@ export default function Explore() {
                         ? { border: "1.5px solid var(--border)", color: "var(--foreground)", background: "transparent" }
                         : { background: accentColor, color: "#fff" }}
                     >
-                      {followingIds.has(u.id) ? "Following" : "Follow"}
+                      {followingIds.has(u.id) ? t("following_btn") : t("follow")}
                     </button>
                   )}
                 </div>
@@ -206,15 +208,15 @@ export default function Explore() {
           <div className="flex flex-col items-center justify-center py-16 px-6 gap-4">
             <div className="text-5xl">🍇</div>
             <div className="text-center">
-              <div className="font-bold text-foreground text-base mb-1">Classic Vines Archive</div>
-              <div className="text-sm text-muted-foreground leading-relaxed">Browse the iconic 6-second loops that defined internet culture from 2013–2017.</div>
+              <div className="font-bold text-foreground text-base mb-1">{t("classic_vines_archive")}</div>
+              <div className="text-sm text-muted-foreground leading-relaxed">{t("classic_vines_desc")}</div>
             </div>
             <button
               onClick={() => navigate("/classic-vines")}
               className="px-6 py-3 rounded-full text-white text-sm font-bold"
               style={{ background: accentColor }}
             >
-              Open Vine Archive →
+              {t("open_vine_archive")}
             </button>
           </div>
         ) : (

@@ -97,4 +97,15 @@ export const STRINGS = {
   welcome_back: "Welcome back",
   start_looping: "Start Looping",
   see_more: "See more",
+
+  // Explore
+  search_placeholder: "Search loops, people, tags…",
+  tab_top: "Top",
+  tab_people: "People",
+  tab_tags: "Tags",
+  trending_now: "Trending Now",
+  no_users_found: "No users found",
+  classic_vines_archive: "Classic Vines Archive",
+  classic_vines_desc: "Browse the iconic 6-second loops that defined internet culture from 2013–2017.",
+  open_vine_archive: "Open Vine Archive →",
 };

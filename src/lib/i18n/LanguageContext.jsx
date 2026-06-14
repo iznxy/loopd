@@ -31,14 +31,19 @@ export function LanguageProvider({ children }) {
     applyDir(lang);
     localStorage.setItem("loopd_lang", lang);
 
-    // Use cache if present
+    // Use cache only if it covers every current key (avoids stale/partial caches
+    // leaving parts of the app stuck in English after new strings are added)
     const cached = localStorage.getItem(cacheKey(lang));
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
-        // Merge so any newly-added keys fall back to English until re-translated
-        setDict({ ...STRINGS, ...parsed });
-        return;
+        const complete = Object.keys(STRINGS).every(
+          (k) => typeof parsed[k] === "string" && parsed[k].length > 0
+        );
+        if (complete) {
+          setDict({ ...STRINGS, ...parsed });
+          return;
+        }
       } catch { /* fall through to fetch */ }
     }
 
@@ -48,9 +53,12 @@ export function LanguageProvider({ children }) {
         targetLanguage: lang,
       });
       const translations = res?.data?.translations;
-      if (translations) {
-        localStorage.setItem(cacheKey(lang), JSON.stringify(translations));
-        setDict({ ...STRINGS, ...translations });
+      if (translations && typeof translations === "object") {
+        const merged = { ...STRINGS, ...translations };
+        localStorage.setItem(cacheKey(lang), JSON.stringify(merged));
+        setDict(merged);
+      } else {
+        setDict(STRINGS); // graceful fallback to English
       }
     } catch {
       setDict(STRINGS); // graceful fallback to English

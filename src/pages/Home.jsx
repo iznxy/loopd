@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, Share2, Bookmark, Music2, Volume2, VolumeX, Download } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { fmtN, getAvColor, getInitials } from "@/lib/utils";
 import CommentsPanel from "@/components/CommentsPanel";
 import ShareSheet from "@/components/ShareSheet";
@@ -249,6 +250,7 @@ function PostCard({ post, currentUser, accentColor, onSaveChange }) {
 
 export default function Home() {
   const { accentColor } = useTheme();
+  const { t } = useLanguage();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showVineReel, setShowVineReel] = useState(() => localStorage.getItem("loopd_new_user") === "1");
@@ -349,19 +351,19 @@ export default function Home() {
 
       {/* Top bar */}
       <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-center gap-6 pt-3 pb-2 pointer-events-none">
-        {["foryou", "following"].map(t => (
+        {["foryou", "following"].map(tabKey => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
             className="pointer-events-auto text-sm font-bold transition-all"
             style={{
-              color: tab === t ? "#fff" : "rgba(255,255,255,0.45)",
-              borderBottom: tab === t ? "2.5px solid #fff" : "2.5px solid transparent",
+              color: tab === tabKey ? "#fff" : "rgba(255,255,255,0.45)",
+              borderBottom: tab === tabKey ? "2.5px solid #fff" : "2.5px solid transparent",
               paddingBottom: 2,
               textShadow: "0 1px 4px rgba(0,0,0,0.5)",
             }}
           >
-            {t === "foryou" ? "For You" : "Following"}
+            {tabKey === "foryou" ? t("for_you") : t("following")}
           </button>
         ))}
       </div>
@@ -373,8 +375,8 @@ export default function Home() {
       ) : displayPosts.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-full gap-3 text-white">
           <div className="text-5xl" style={{ animation: "float 2s ease-in-out infinite" }}>🎬</div>
-          <div className="text-lg font-bold">No loops yet</div>
-          <div className="text-sm opacity-60">Be the first to post!</div>
+          <div className="text-lg font-bold">{t("no_posts")}</div>
+          <div className="text-sm opacity-60">{t("no_posts_sub")}</div>
         </div>
       ) : (
         <div
