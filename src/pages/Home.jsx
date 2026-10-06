@@ -151,7 +151,7 @@ function PostCard({ post, currentUser, accentColor, onSaveChange }) {
       )}
 
       {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/70 pointer-events-none" />
+      <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 30%, transparent 60%, rgba(0,0,0,0.8) 100%)" }} />
 
       {/* Double-tap heart burst */}
       {showHeart && (
@@ -350,7 +350,8 @@ export default function Home() {
       )}
 
       {/* Top bar */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-center gap-6 pt-3 pb-2 pointer-events-none">
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-center gap-6 pt-3 pb-2 pointer-events-none"
+        style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent)" }}>
         {["foryou", "following"].map(tabKey => (
           <button
             key={tabKey}
@@ -358,7 +359,7 @@ export default function Home() {
             className="pointer-events-auto text-sm font-bold transition-all"
             style={{
               color: tab === tabKey ? "#fff" : "rgba(255,255,255,0.45)",
-              borderBottom: tab === tabKey ? "2.5px solid #fff" : "2.5px solid transparent",
+              borderBottom: tab === tabKey ? `2.5px solid ${accentColor}` : "2.5px solid transparent",
               paddingBottom: 2,
               textShadow: "0 1px 4px rgba(0,0,0,0.5)",
             }}

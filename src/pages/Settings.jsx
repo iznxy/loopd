@@ -54,9 +54,9 @@ export default function Settings() {
 
   return (
     <div className="flex flex-col h-screen bg-background">
-      <div className="flex items-center justify-between px-4 py-3 flex-shrink-0" style={{ background: accentColor }}>
-        <button onClick={() => navigate(-1)}><ChevronLeft size={22} color="#fff" /></button>
-        <span className="text-base font-bold text-white">{t("settings")}</span>
+      <div className="flex items-center justify-between px-4 py-3 flex-shrink-0 glass-strong border-b border-border">
+        <button onClick={() => navigate(-1)}><ChevronLeft size={22} className="text-foreground" /></button>
+        <span className="text-base font-bold text-foreground">{t("settings")}</span>
         <div style={{ width: 22 }} />
       </div>
 

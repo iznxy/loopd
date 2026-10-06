@@ -6,6 +6,7 @@ import { useTheme } from "@/lib/ThemeContext";
 import { getAvColor, getInitials, timeAgo } from "@/lib/utils";
 import GifPicker from "@/components/chat/GifPicker";
 import EmojiPicker from "@/components/chat/EmojiPicker";
+import VoiceMessage from "@/components/chat/VoiceMessage";
 
 export default function ChatWindow() {
   const { conversationId } = useParams();
@@ -85,8 +86,9 @@ export default function ChatWindow() {
       stream.getTracks().forEach(t => t.stop());
       const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
       const file = new File([blob], "voice.webm", { type: "audio/webm" });
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      await sendMessage({ text: "", message_type: "voice", audio_url: file_url });
+      const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
+      const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({ file_uri });
+      await sendMessage({ text: "", message_type: "voice", audio_url: signed_url });
     };
     recorder.start();
     setRecording(true);
@@ -113,7 +115,7 @@ export default function ChatWindow() {
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card flex-shrink-0">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-border glass-strong flex-shrink-0">
         <button onClick={() => navigate("/messages")}><ChevronLeft size={22} className="text-foreground" /></button>
         <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs overflow-hidden flex-shrink-0"
           style={{ background: avColor.bg, color: avColor.text }}>
@@ -157,7 +159,7 @@ export default function ChatWindow() {
           return (
             <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
               {msg.message_type === "voice" && msg.audio_url ? (
-                <audio controls src={msg.audio_url} className="max-w-[220px] rounded-xl" />
+                <VoiceMessage audioUrl={msg.audio_url} isMe={isMe} accentColor={accentColor} />
               ) : msg.message_type === "gif" && msg.text ? (
                 <img
                   src={msg.text}
@@ -186,7 +188,7 @@ export default function ChatWindow() {
       {showGif && <GifPicker onSelect={handleGifSelect} onClose={() => setShowGif(false)} />}
 
       {/* Input bar */}
-      <div className="flex items-center gap-2 px-3 py-2 border-t border-border bg-card flex-shrink-0">
+      <div className="flex items-center gap-2 px-3 py-2 border-t border-border glass-strong flex-shrink-0">
         <button onClick={() => { setShowEmoji(v => !v); setShowGif(false); }} className="p-1.5">
           <Smile size={20} className="text-muted-foreground" />
         </button>

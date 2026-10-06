@@ -18,6 +18,31 @@
     },
     "avatar_url": {
       "type": "string"
+    },
+    "private_account": {
+      "type": "boolean",
+      "default": false
+    },
+    "allow_downloads": {
+      "type": "boolean",
+      "default": true
+    },
+    "allow_duets": {
+      "type": "boolean",
+      "default": true
+    },
+    "show_adult_content": {
+      "type": "boolean",
+      "default": false
+    },
+    "allow_messages_from": {
+      "type": "string",
+      "enum": [
+        "everyone",
+        "followers",
+        "no_one"
+      ],
+      "default": "everyone"
     }
   }
 }
