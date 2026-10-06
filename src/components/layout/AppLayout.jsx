@@ -5,6 +5,8 @@ import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
+const ACID = "#00ff88";
+
 export default function AppLayout() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,25 +33,44 @@ export default function AppLayout() {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-background overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden" style={{ background: "#090b0b" }}>
       <div className="flex-1 overflow-hidden">
         <Outlet />
       </div>
 
       {/* Floating Glass Bottom Nav */}
       <div className="flex-shrink-0 flex justify-center px-4 pb-3" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}>
-        <nav className="glass-strong rounded-2xl flex items-center justify-around px-2 py-2 shadow-2xl"
-          style={{ minWidth: 320, maxWidth: 420 }}>
+        <nav
+          className="flex items-center justify-around"
+          style={{
+            minWidth: 320,
+            maxWidth: 460,
+            minHeight: 64,
+            border: "1px solid rgba(255,255,255,0.16)",
+            borderRadius: 23,
+            background: "rgba(24,29,27,0.77)",
+            backdropFilter: "blur(18px)",
+            WebkitBackdropFilter: "blur(18px)",
+            boxShadow: "0 18px 48px rgba(0,0,0,0.46)",
+            padding: "10px 12px",
+            animation: "panelUp 0.7s cubic-bezier(0.2,0.75,0.25,1) 0.24s both",
+          }}
+        >
           {tabs.map(({ path, icon: Icon, label, badge, isCenter }) => {
             const active = location.pathname === path;
             if (isCenter) {
               return (
-                <Link key={path} to={path} className="flex flex-col items-center justify-center px-2">
+                <Link key={path} to={path} className="flex items-center justify-center">
                   <div
-                    className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-lg transition-transform active:scale-90"
-                    style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)` }}
+                    className="flex items-center justify-center transition-transform active:scale-90"
+                    style={{
+                      width: 46, height: 46, borderRadius: 15,
+                      border: "1px solid rgba(0,255,136,0.5)",
+                      background: ACID,
+                      boxShadow: "0 0 22px rgba(0,255,136,0.2)",
+                    }}
                   >
-                    <Plus size={24} color="#fff" strokeWidth={2.5} />
+                    <Plus size={23} color="#07110c" strokeWidth={2.4} />
                   </div>
                 </Link>
               );
@@ -58,26 +79,27 @@ export default function AppLayout() {
               <Link
                 key={path}
                 to={path}
-                className="flex flex-col items-center justify-center gap-0.5 px-2.5 py-1.5 relative transition-transform active:scale-90"
+                className="relative flex items-center justify-center transition-transform active:scale-90"
+                style={{ width: 56, height: 48 }}
               >
                 <div className="relative">
                   <Icon
                     size={21}
-                    strokeWidth={active ? 2.5 : 1.8}
-                    style={{ color: active ? accentColor : "var(--muted-foreground)" }}
+                    strokeWidth={1.7}
+                    style={{ color: active ? ACID : "#a1aaa5" }}
                   />
                   {badge > 0 && (
                     <span
-                      className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full text-white text-[9px] font-bold flex items-center justify-center"
-                      style={{ background: "#e91e8c" }}
+                      className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center"
+                      style={{ background: ACID, color: "#07110c" }}
                     >
                       {badge > 9 ? "9+" : badge}
                     </span>
                   )}
                   {active && (
                     <div
-                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
-                      style={{ background: accentColor }}
+                      className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+                      style={{ background: ACID }}
                     />
                   )}
                 </div>

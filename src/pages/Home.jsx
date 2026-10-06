@@ -23,7 +23,9 @@ const BG_MAP = {
   bg6: "linear-gradient(135deg,#a18cd1,#fbc2eb)",
 };
 
-function PostCard({ post, currentUser, accentColor, onSaveChange }) {
+const ACID = "#00ff88";
+
+function PostCard({ post, currentUser, onSaveChange, index, total }) {
   const navigate = useNavigate();
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(post.likes_count || 0);
@@ -119,8 +121,14 @@ function PostCard({ post, currentUser, accentColor, onSaveChange }) {
   }
 
   const username = post.username || post.display_name || "user";
-  const avColor = getAvColor(username);
   const filterStyle = getFilterStyle(post.filter || "none");
+  const actionBtnStyle = {
+    width: 48, height: 56, borderRadius: 16,
+    border: "1px solid rgba(255,255,255,0.24)",
+    background: "rgba(13,17,16,0.43)",
+    backdropFilter: "blur(16px)",
+    WebkitBackdropFilter: "blur(16px)",
+  };
 
   return (
     <div
@@ -129,7 +137,7 @@ function PostCard({ post, currentUser, accentColor, onSaveChange }) {
       onDoubleClick={handleDoubleTap}
     >
       {/* Background */}
-      <div className="absolute inset-0" style={{ background: BG_MAP[post.bg_class] || BG_MAP.bg1 }}>
+      <div className="absolute inset-0" style={{ background: BG_MAP[post.bg_class] || "#121716" }}>
         {post.video_url
           ? <video
               ref={videoRef}
@@ -150,14 +158,27 @@ function PostCard({ post, currentUser, accentColor, onSaveChange }) {
           style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E\")", backgroundSize: "150px" }} />
       )}
 
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 30%, transparent 60%, rgba(0,0,0,0.8) 100%)" }} />
+      {/* Scrim */}
+      <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, rgba(3,5,5,0.5), transparent 27%, transparent 52%, rgba(3,5,5,0.82))" }} />
+
+      {/* Top bar: live tag + counter */}
+      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 pt-4 pointer-events-none">
+        <div className="flex items-center" style={{ font: "11px ui-monospace, SFMono-Regular, monospace", textTransform: "uppercase", letterSpacing: "1.5px", color: "#e7eee9" }}>
+          <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ background: ACID, boxShadow: "0 0 13px #00ff88", animation: "pulse-accent 2s ease-in-out infinite" }} />
+          Loopd
+        </div>
+        {total > 0 && (
+          <div style={{ font: "11px ui-monospace, SFMono-Regular, monospace", letterSpacing: "1.5px", color: "#929a96" }}>
+            {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
+          </div>
+        )}
+      </div>
 
       {/* Double-tap heart burst */}
       {showHeart && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
           <div style={{ animation: "heartBurst 0.9s ease forwards" }}>
-            <Heart size={90} fill="#e91e8c" color="#e91e8c" />
+            <Heart size={90} fill={ACID} color={ACID} />
           </div>
         </div>
       )}
@@ -165,51 +186,40 @@ function PostCard({ post, currentUser, accentColor, onSaveChange }) {
       {/* Mute toggle */}
       {post.video_url && (
         <button
-          className="absolute top-14 left-4 w-9 h-9 bg-black/50 rounded-full flex items-center justify-center z-10 backdrop-blur-sm"
+          className="absolute top-14 right-4 w-10 h-10 rounded-full flex items-center justify-center z-10 transition-transform active:scale-90"
+          style={{ border: "1px solid rgba(255,255,255,0.45)", background: "rgba(12,16,15,0.46)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)" }}
           onClick={e => { e.stopPropagation(); setMuted(m => !m); }}
         >
-          {muted ? <VolumeX size={15} color="#fff" /> : <Volume2 size={15} color="#fff" />}
+          {muted ? <VolumeX size={16} color="#fff" /> : <Volume2 size={16} color="#fff" />}
         </button>
       )}
 
       {/* Right action bar */}
-      <div className="absolute right-3 bottom-24 flex flex-col items-center gap-4 z-10" style={{ minWidth: 56 }}>
-        {/* Spinning disc avatar */}
-        <div
-          className="w-11 h-11 rounded-full border-2 border-white overflow-hidden flex items-center justify-center font-bold text-xs cursor-pointer mb-1"
-          style={{ background: avColor.bg, color: avColor.text, animation: post.video_url ? "vinylSpin 4s linear infinite" : "none" }}
-          onClick={e => { e.stopPropagation(); navigate(`/creator/${username}`); }}
-        >
-          {getInitials(username)}
-        </div>
-
-        <button onClick={e => { e.stopPropagation(); handleLike(); }} className="flex flex-col items-center gap-0.5">
-          <div style={{ animation: liked ? "likePop 0.3s ease" : "none" }}>
-            <Heart size={28} fill={liked ? "#e91e8c" : "none"} color={liked ? "#e91e8c" : "#fff"} strokeWidth={2} />
-          </div>
-          <span className="text-white text-[10px] font-bold drop-shadow">{fmtN(likesCount)}</span>
+      <div className="absolute right-3 bottom-28 flex flex-col items-center gap-2.5 z-10">
+        <button onClick={e => { e.stopPropagation(); handleLike(); }} className="flex flex-col items-center justify-center gap-1 transition-transform active:scale-90" style={actionBtnStyle}>
+          <Heart size={18} fill={liked ? ACID : "none"} color={liked ? ACID : "#f5f7f5"} strokeWidth={1.7} />
+          <span style={{ font: "9px ui-monospace, monospace", color: liked ? ACID : "#f5f7f5" }}>{fmtN(likesCount)}</span>
         </button>
 
-        <button onClick={e => { e.stopPropagation(); setShowComments(true); }} className="flex flex-col items-center gap-0.5">
-          <MessageCircle size={28} color="#fff" strokeWidth={2} />
-          <span className="text-white text-[10px] font-bold drop-shadow">{fmtN(post.comments_count || 0)}</span>
+        <button onClick={e => { e.stopPropagation(); setShowComments(true); }} className="flex flex-col items-center justify-center gap-1 transition-transform active:scale-90" style={actionBtnStyle}>
+          <MessageCircle size={18} color="#f5f7f5" strokeWidth={1.7} />
+          <span style={{ font: "9px ui-monospace, monospace", color: "#f5f7f5" }}>{fmtN(post.comments_count || 0)}</span>
         </button>
 
-        <button onClick={e => { e.stopPropagation(); handleSave(); }} className="flex flex-col items-center gap-0.5">
-          <Bookmark size={28} fill={saved ? "#fff" : "none"} color="#fff" strokeWidth={2}
-            style={{ animation: saved ? "savePop 0.3s ease" : "none" }} />
-          <span className="text-white text-[10px] font-bold drop-shadow">{saved ? "Saved" : "Save"}</span>
+        <button onClick={e => { e.stopPropagation(); handleSave(); }} className="flex flex-col items-center justify-center gap-1 transition-transform active:scale-90" style={actionBtnStyle}>
+          <Bookmark size={18} fill={saved ? ACID : "none"} color={saved ? ACID : "#f5f7f5"} strokeWidth={1.7} />
+          <span style={{ font: "9px ui-monospace, monospace", color: saved ? ACID : "#f5f7f5" }}>{saved ? "Saved" : "Save"}</span>
         </button>
 
-        <button onClick={e => { e.stopPropagation(); setShowShare(true); }} className="flex flex-col items-center gap-0.5">
-          <Share2 size={28} color="#fff" strokeWidth={2} />
-          <span className="text-white text-[10px] font-bold drop-shadow">Share</span>
+        <button onClick={e => { e.stopPropagation(); setShowShare(true); }} className="flex flex-col items-center justify-center gap-1 transition-transform active:scale-90" style={actionBtnStyle}>
+          <Share2 size={18} color="#f5f7f5" strokeWidth={1.7} />
+          <span style={{ font: "9px ui-monospace, monospace", color: "#f5f7f5" }}>Share</span>
         </button>
 
         {post.allow_downloads && post.video_url && (
-          <button onClick={e => { e.stopPropagation(); handleDownload(); }} className="flex flex-col items-center gap-0.5">
-            <Download size={24} color="#fff" strokeWidth={2} />
-            <span className="text-white text-[10px] font-bold drop-shadow">Save</span>
+          <button onClick={e => { e.stopPropagation(); handleDownload(); }} className="flex flex-col items-center justify-center gap-1 transition-transform active:scale-90" style={actionBtnStyle}>
+            <Download size={18} color="#f5f7f5" strokeWidth={1.7} />
+            <span style={{ font: "9px ui-monospace, monospace", color: "#f5f7f5" }}>Save</span>
           </button>
         )}
       </div>
@@ -217,23 +227,23 @@ function PostCard({ post, currentUser, accentColor, onSaveChange }) {
       {/* Bottom info */}
       <div className="absolute bottom-8 left-4 right-20 z-10">
         <div
-          className="font-bold text-white text-sm mb-1 cursor-pointer drop-shadow-md"
+          className="font-bold text-white text-base mb-2 cursor-pointer"
+          style={{ letterSpacing: "0.15px" }}
           onClick={e => { e.stopPropagation(); navigate(`/creator/${username}`); }}
         >
           @{username}
         </div>
         {post.caption && (
-          <p className="text-white text-sm leading-snug mb-1.5 line-clamp-2 drop-shadow">{post.caption}</p>
+          <p className="text-white/90 text-sm leading-snug mb-2 line-clamp-2">{post.caption}</p>
         )}
         {post.music && (
-          <div className="flex items-center gap-1.5 bg-black/30 rounded-full px-3 py-1 backdrop-blur-sm w-fit">
-            <Music2 size={11} color="#fff" className="animate-pulse" />
-            <span className="text-white text-xs">{post.music}</span>
+          <div className="flex items-center gap-2" style={{ font: "11px ui-monospace, SFMono-Regular, monospace", color: "#c1c9c4" }}>
+            <Music2 size={11} /> {post.music}
           </div>
         )}
         {post.filter && post.filter !== "none" && (
-          <div className="mt-1 px-2 py-0.5 rounded-full bg-black/30 backdrop-blur-sm w-fit">
-            <span className="text-white/70 text-[10px]">✦ {post.filter}</span>
+          <div className="mt-2 inline-block px-2 py-0.5" style={{ font: "10px ui-monospace, monospace", color: "#929a96", border: "1px solid rgba(255,255,255,0.12)" }}>
+            {post.filter.toUpperCase()}
           </div>
         )}
       </div>
@@ -337,7 +347,7 @@ export default function Home() {
   }
 
   return (
-    <div className="relative w-full h-full bg-black overflow-hidden">
+    <div className="relative w-full h-full overflow-hidden" style={{ background: "#090b0b" }}>
       {/* Pull to refresh indicator */}
       {(pullDistance > 0 || refreshing) && (
         <div
@@ -350,23 +360,30 @@ export default function Home() {
       )}
 
       {/* Top bar */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-center gap-6 pt-3 pb-2 pointer-events-none"
-        style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.3), transparent)" }}>
-        {["foryou", "following"].map(tabKey => (
-          <button
-            key={tabKey}
-            onClick={() => setTab(tabKey)}
-            className="pointer-events-auto text-sm font-bold transition-all"
-            style={{
-              color: tab === tabKey ? "#fff" : "rgba(255,255,255,0.45)",
-              borderBottom: tab === tabKey ? `2.5px solid ${accentColor}` : "2.5px solid transparent",
-              paddingBottom: 2,
-              textShadow: "0 1px 4px rgba(0,0,0,0.5)",
-            }}
-          >
-            {tabKey === "foryou" ? t("for_you") : t("following")}
-          </button>
-        ))}
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-3 pb-2 pointer-events-none"
+        style={{ background: "linear-gradient(to bottom, rgba(3,5,5,0.5), transparent)" }}>
+        <div className="pointer-events-auto text-lg" style={{ fontWeight: 750, letterSpacing: "-1.5px", color: "#f5f7f5", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
+          Loopd<span style={{ color: ACID }}>.</span>
+        </div>
+        <div className="flex items-center gap-6 pointer-events-auto">
+          {["foryou", "following"].map(tabKey => (
+            <button
+              key={tabKey}
+              onClick={() => setTab(tabKey)}
+              className="transition-colors"
+              style={{
+                font: "600 12px ui-monospace, SFMono-Regular, monospace",
+                textTransform: "uppercase",
+                letterSpacing: "1.1px",
+                color: tab === tabKey ? "#f4f6f4" : "#79817d",
+                borderBottom: tab === tabKey ? `2px solid ${ACID}` : "2px solid transparent",
+                paddingBottom: 2,
+              }}
+            >
+              {tabKey === "foryou" ? t("for_you") : t("following")}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
@@ -374,10 +391,10 @@ export default function Home() {
           <SkeletonPost />
         </div>
       ) : displayPosts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-full gap-3 text-white">
+        <div className="flex flex-col items-center justify-center h-full gap-3" style={{ color: "#f5f7f5" }}>
           <div className="text-5xl" style={{ animation: "float 2s ease-in-out infinite" }}>🎬</div>
-          <div className="text-lg font-bold">{t("no_posts")}</div>
-          <div className="text-sm opacity-60">{t("no_posts_sub")}</div>
+          <div className="text-lg" style={{ fontWeight: 700 }}>{t("no_posts")}</div>
+          <div className="text-sm" style={{ color: "#929a96" }}>{t("no_posts_sub")}</div>
         </div>
       ) : (
         <div
@@ -390,37 +407,46 @@ export default function Home() {
         >
           {/* Stories row — snaps as first card */}
           <div
-            className="relative w-full flex-shrink-0 bg-black"
-            style={{ height: "100svh", scrollSnapAlign: "start", scrollSnapStop: "always" }}
+            className="relative w-full flex-shrink-0"
+            style={{ height: "100svh", scrollSnapAlign: "start", scrollSnapStop: "always", background: "#090b0b" }}
           >
-            <div className="absolute inset-0 flex flex-col justify-end pb-24"
-              style={{ background: "linear-gradient(to bottom, #0a0a0a, #111)" }}>
+            <div className="absolute inset-0 flex flex-col justify-end pb-28 px-4">
               {/* Loopd wordmark */}
-              <div className="flex flex-col items-center gap-2 mb-8">
-                <div className="text-5xl font-bold text-white" style={{ textShadow: `0 0 30px ${accentColor}` }}>∞</div>
-                <div className="text-2xl font-bold text-white tracking-tight">Loopd</div>
-                <div className="text-white/50 text-xs">Swipe up to start watching</div>
+              <div className="flex flex-col gap-3 mb-8 animate-panel-up">
+                <div className="text-4xl" style={{ fontWeight: 750, letterSpacing: "-2px", color: "#f5f7f5" }}>
+                  Loopd<span style={{ color: ACID }}>.</span>
+                </div>
+                <div style={{ font: "11px ui-monospace, SFMono-Regular, monospace", letterSpacing: "1.5px", textTransform: "uppercase", color: "#929a96" }}>
+                  Swipe up to start watching
+                </div>
               </div>
-              <StoriesRow currentUser={currentUser} />
+              {/* Stories section */}
+              <div className="animate-panel-up" style={{ animationDelay: "0.08s" }}>
+                <div className="flex items-center justify-between mb-3" style={{ borderTop: "1px solid rgba(255,255,255,0.12)", paddingTop: "12px" }}>
+                  <span style={{ font: "11px ui-monospace, SFMono-Regular, monospace", letterSpacing: "1.6px", textTransform: "uppercase", color: "#929a96" }}>Stories</span>
+                </div>
+                <StoriesRow currentUser={currentUser} />
+              </div>
             </div>
           </div>
 
           {tab === "following" && displayPosts.length === 0 ? (
             <div
-              className="relative w-full flex-shrink-0 flex flex-col items-center justify-center gap-3 text-white bg-black"
-              style={{ height: "100svh", scrollSnapAlign: "start" }}
+              className="relative w-full flex-shrink-0 flex flex-col items-center justify-center gap-3"
+              style={{ height: "100svh", scrollSnapAlign: "start", background: "#090b0b", color: "#f5f7f5" }}
             >
               <div className="text-5xl">👥</div>
-              <div className="text-lg font-bold">No loops yet</div>
-              <div className="text-sm opacity-60">Follow more creators to see their loops here</div>
+              <div className="text-lg" style={{ fontWeight: 700 }}>No loops yet</div>
+              <div className="text-sm" style={{ color: "#929a96" }}>Follow more creators to see their loops here</div>
             </div>
           ) : (
-            displayPosts.map(post => (
+            displayPosts.map((post, i) => (
               <PostCard
                 key={post.id}
                 post={post}
                 currentUser={currentUser}
-                accentColor={accentColor}
+                index={i}
+                total={displayPosts.length}
               />
             ))
           )}
@@ -428,21 +454,10 @@ export default function Home() {
       )}
 
       <style>{`
-        @keyframes vinylSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes heartBurst {
           0% { transform: scale(0.3); opacity: 1; }
           50% { transform: scale(1.3); opacity: 1; }
           100% { transform: scale(1.1); opacity: 0; }
-        }
-        @keyframes likePop {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.4); }
-          100% { transform: scale(1); }
-        }
-        @keyframes savePop {
-          0% { transform: scale(1); }
-          50% { transform: scale(1.3); }
-          100% { transform: scale(1); }
         }
         @keyframes float {
           0%, 100% { transform: translateY(0); }
