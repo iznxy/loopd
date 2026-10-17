@@ -1,18 +1,33 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { X, SwitchCamera, Image } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { useTheme } from "@/lib/ThemeContext";
-import { VIDEO_FILTERS, getFilterStyle, FilterPicker } from "@/components/VideoFilters";
+import { getFilterStyle, FilterPicker } from "@/components/VideoFilters";
+
+const ACID = "#00ff88";
+
+function getSupportedMimeType() {
+  const types = [
+    "video/webm;codecs=vp9,opus",
+    "video/webm;codecs=vp8,opus",
+    "video/webm;codecs=h264,opus",
+    "video/webm",
+    "video/mp4;codecs=h264,aac",
+    "video/mp4",
+  ];
+  for (const t of types) {
+    try { if (MediaRecorder.isTypeSupported(t)) return t; } catch {}
+  }
+  return "";
+}
 
 export default function Record() {
   const navigate = useNavigate();
-  const { accentColor } = useTheme();
   const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   const timerRef = useRef(null);
-  const [stream, setStream] = useState(null);
+  const streamRef = useRef(null);
   const [recording, setRecording] = useState(false);
   const [progress, setProgress] = useState(0);
   const [facingMode, setFacingMode] = useState("user");
@@ -21,39 +36,43 @@ export default function Record() {
   const [selectedFilter, setSelectedFilter] = useState("none");
   const fileInputRef = useRef(null);
 
-  async function handleGalleryUpload(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    navigate("/post", { state: { video_url: file_url, filter: selectedFilter } });
-  }
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+    clearInterval(timerRef.current);
+  }, []);
+
+  const startCamera = useCallback(async () => {
+    try {
+      stopCamera();
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio: true });
+      streamRef.current = s;
+      if (videoRef.current) videoRef.current.srcObject = s;
+    } catch (e) {
+      setError(e.name === "NotAllowedError"
+        ? "Camera access denied. Please allow camera permissions."
+        : "Could not access camera.");
+    }
+  }, [facingMode, stopCamera]);
 
   useEffect(() => {
     startCamera();
     return () => stopCamera();
   }, [facingMode]);
 
-  async function startCamera() {
-    try {
-      if (stream) stream.getTracks().forEach(t => t.stop());
-      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode }, audio: true });
-      setStream(s);
-      if (videoRef.current) videoRef.current.srcObject = s;
-    } catch (e) {
-      setError("Camera access denied. Please allow camera permissions.");
-    }
-  }
-
-  function stopCamera() {
-    if (stream) stream.getTracks().forEach(t => t.stop());
-    clearInterval(timerRef.current);
-  }
-
   function startRecording() {
-    if (!stream) return;
+    if (!streamRef.current) return;
     chunksRef.current = [];
-    const mr = new MediaRecorder(stream, { mimeType: "video/webm;codecs=vp8,opus" });
+    const mimeType = getSupportedMimeType();
+    let mr;
+    try {
+      mr = new MediaRecorder(streamRef.current, mimeType ? { mimeType } : undefined);
+    } catch {
+      setError("Recording not supported on this device.");
+      return;
+    }
     mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
     mr.onstop = handleUpload;
     mr.start(100);
@@ -78,10 +97,34 @@ export default function Record() {
 
   async function handleUpload() {
     setUploading(true);
-    const blob = new Blob(chunksRef.current, { type: "video/webm" });
-    const file = new File([blob], "loop.webm", { type: "video/webm" });
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
-    navigate("/post", { state: { video_url: file_url, filter: selectedFilter } });
+    setError("");
+    try {
+      const mimeType = chunksRef.current[0]?.type || "video/webm";
+      const ext = mimeType.includes("mp4") ? "mp4" : "webm";
+      const blob = new Blob(chunksRef.current, { type: mimeType });
+      const file = new File([blob], `loop.${ext}`, { type: mimeType });
+      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+      if (!file_url) throw new Error("Upload failed");
+      navigate("/post", { state: { video_url: file_url, filter: selectedFilter } });
+    } catch {
+      setError("Upload failed. Please try again.");
+      setUploading(false);
+    }
+  }
+
+  async function handleGalleryUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError("");
+    try {
+      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+      if (!file_url) throw new Error("Upload failed");
+      navigate("/post", { state: { video_url: file_url, filter: selectedFilter } });
+    } catch {
+      setError("Upload failed. Please try again.");
+      setUploading(false);
+    }
   }
 
   return (
@@ -90,7 +133,7 @@ export default function Record() {
 
       {/* Progress bar */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-white/20">
-        <div className="h-full transition-none bg-white" style={{ width: `${progress}%`, background: accentColor }} />
+        <div className="h-full" style={{ width: `${progress}%`, background: ACID }} />
       </div>
 
       {/* Top controls */}
@@ -98,7 +141,7 @@ export default function Record() {
         <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center">
           <X size={20} color="#fff" />
         </button>
-        <div className="text-white text-sm font-bold bg-black/40 px-3 py-1 rounded-full">6s Loop</div>
+        <div className="text-white text-sm font-bold bg-black/40 px-3 py-1 rounded-full" style={{ fontFamily: "ui-monospace, monospace" }}>6s Loop</div>
         <div className="flex gap-2">
           <button onClick={() => fileInputRef.current?.click()} className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center">
             <Image size={20} color="#fff" />
@@ -123,7 +166,7 @@ export default function Record() {
         </div>
       )}
 
-      {/* Filter strip — swipe left/right like Instagram */}
+      {/* Filter strip */}
       <div className="absolute bottom-36 left-0 right-0 py-2">
         <FilterPicker selected={selectedFilter} onChange={setSelectedFilter} />
       </div>
@@ -134,7 +177,7 @@ export default function Record() {
           onPointerDown={startRecording}
           onPointerUp={recording ? stopRecording : undefined}
           className="relative w-20 h-20 rounded-full border-4 border-white flex items-center justify-center"
-          style={{ background: recording ? accentColor : "transparent" }}
+          style={{ background: recording ? ACID : "transparent" }}
         >
           <div className="w-14 h-14 rounded-full bg-white" style={{ transform: recording ? "scale(0.6)" : "scale(1)", transition: "transform 0.2s" }} />
         </button>

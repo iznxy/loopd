@@ -44,8 +44,8 @@ export default function Profile() {
       setFollowing(followingList.length);
       if (likes.length > 0) {
         const likedPostIds = likes.map(l => l.post_id);
-        const allPosts = await base44.entities.Post.list("-created_date", 100);
-        setLikedPosts(allPosts.filter(p => likedPostIds.includes(p.id)));
+        const liked = await base44.entities.Post.filter({ id: { $in: likedPostIds } }, "-created_date", 50);
+        setLikedPosts(liked);
       }
       setLoading(false);
     }).catch(() => setLoading(false));

@@ -54,10 +54,16 @@
       ]
     },
     "update": {
-      "data.receiver_id": "{{user.id}}",
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "data.receiver_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "delete": {
       "$or": [
