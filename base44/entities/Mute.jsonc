@@ -1,0 +1,27 @@
+{
+  "name": "Mute",
+  "type": "object",
+  "properties": {
+    "muter_id": {
+      "type": "string"
+    },
+    "muted_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "muter_id",
+    "muted_id"
+  ],
+  "rls": {
+    "create": {
+      "data.muter_id": "{{user.id}}"
+    },
+    "read": {
+      "data.muter_id": "{{user.id}}"
+    },
+    "delete": {
+      "data.muter_id": "{{user.id}}"
+    }
+  }
+}

@@ -2,10 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Settings, Edit3, Grid3X3, Heart, Bookmark } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { useTheme } from "@/lib/ThemeContext";
 import { fmtN, getAvColor, getInitials } from "@/lib/utils";
 import FollowListModal from "@/components/FollowListModal";
 import SavedLoopsModal from "@/components/SavedLoopsModal";
+
+const ACID = "#00ff88";
 
 const BG_MAP = {
   bg1: "linear-gradient(135deg,#667eea,#764ba2)",
@@ -18,7 +19,6 @@ const BG_MAP = {
 
 export default function Profile() {
   const navigate = useNavigate();
-  const { accentColor } = useTheme();
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
   const [likedPosts, setLikedPosts] = useState([]);
@@ -56,17 +56,20 @@ export default function Profile() {
   const avColor = getAvColor(username);
   const displayPosts = tab === "loops" ? posts : likedPosts;
 
+  const monoNum = { fontFamily: "ui-monospace, SFMono-Regular, monospace", fontWeight: 700, fontSize: 16, color: "#f5f7f5" };
+  const statLabel = { fontSize: 11, color: "#79817d" };
+
   return (
-    <div className="flex flex-col h-full bg-background overflow-y-auto hide-scrollbar">
+    <div className="flex flex-col h-full overflow-y-auto hide-scrollbar" style={{ background: "#090b0b" }}>
       {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-2 flex-shrink-0">
-        <div className="text-lg font-bold text-foreground">@{user?.email?.split("@")[0] || "profile"}</div>
+        <div className="text-lg font-bold" style={{ color: "#f5f7f5" }}>@{user?.email?.split("@")[0] || "profile"}</div>
         <div className="flex gap-1">
           <button onClick={() => setShowSaved(true)} className="p-2">
-            <Bookmark size={20} className="text-foreground" />
+            <Bookmark size={20} style={{ color: "#f5f7f5" }} />
           </button>
           <button onClick={() => navigate("/settings")} className="p-2">
-            <Settings size={20} className="text-foreground" />
+            <Settings size={20} style={{ color: "#f5f7f5" }} />
           </button>
         </div>
       </div>
@@ -74,51 +77,46 @@ export default function Profile() {
       {/* Avatar + stats */}
       <div className="flex items-center gap-4 px-4 py-3 flex-shrink-0">
         <div className="w-20 h-20 rounded-full flex items-center justify-center font-bold text-2xl overflow-hidden flex-shrink-0"
-          style={{ background: avColor.bg, color: avColor.text }}>
+          style={{ background: avColor.bg, color: avColor.text, border: "2px solid rgba(255,255,255,0.12)" }}>
           {user?.avatar_url
             ? <img src={user.avatar_url} alt="" className="w-full h-full object-cover" />
             : getInitials(username)}
         </div>
         <div className="flex gap-4">
           <div className="flex flex-col items-center">
-            <span className="text-base font-bold text-foreground">{fmtN(posts.length)}</span>
-            <span className="text-xs text-muted-foreground">Loops</span>
+            <span style={monoNum}>{fmtN(posts.length)}</span>
+            <span style={statLabel}>Loops</span>
           </div>
-          <button
-            className="flex flex-col items-center active:opacity-70"
-            onClick={() => user && setShowFollowers(true)}
-          >
-            <span className="text-base font-bold text-foreground">{fmtN(followers)}</span>
-            <span className="text-xs text-muted-foreground">Followers</span>
+          <button className="flex flex-col items-center active:opacity-70" onClick={() => user && setShowFollowers(true)}>
+            <span style={monoNum}>{fmtN(followers)}</span>
+            <span style={statLabel}>Followers</span>
           </button>
-          <button
-            className="flex flex-col items-center active:opacity-70"
-            onClick={() => user && setShowFollowing(true)}
-          >
-            <span className="text-base font-bold text-foreground">{fmtN(following)}</span>
-            <span className="text-xs text-muted-foreground">Following</span>
+          <button className="flex flex-col items-center active:opacity-70" onClick={() => user && setShowFollowing(true)}>
+            <span style={monoNum}>{fmtN(following)}</span>
+            <span style={statLabel}>Following</span>
           </button>
           <div className="flex flex-col items-center">
-            <span className="text-base font-bold text-foreground">{fmtN(totalLikes)}</span>
-            <span className="text-xs text-muted-foreground">Likes</span>
+            <span style={monoNum}>{fmtN(totalLikes)}</span>
+            <span style={statLabel}>Likes</span>
           </div>
         </div>
       </div>
 
       {/* Name + bio */}
       <div className="px-4 pb-3 flex-shrink-0">
-        <div className="text-sm font-bold text-foreground">{username}</div>
-        {user?.bio && <div className="text-sm text-muted-foreground mt-0.5">{user.bio}</div>}
+        <div className="text-sm font-bold" style={{ color: "#f5f7f5" }}>{username}</div>
+        {user?.bio && <div className="text-sm mt-0.5" style={{ color: "#a1aaa5" }}>{user.bio}</div>}
         <button
           onClick={() => navigate("/edit-profile")}
-          className="mt-2 w-full py-2.5 rounded-xl border border-border text-sm font-bold text-foreground flex items-center justify-center gap-2"
+          className="mt-2 w-full py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2"
+          style={{ border: "1px solid rgba(255,255,255,0.12)", color: "#f5f7f5" }}
         >
           <Edit3 size={14} /> Edit Profile
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-border flex-shrink-0">
+      <div className="flex flex-shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.12)" }}>
         {[
           { key: "loops", icon: Grid3X3, label: "Loops" },
           { key: "liked", icon: Heart, label: "Liked" },
@@ -126,10 +124,10 @@ export default function Profile() {
           <button
             key={key}
             onClick={() => setTab(key)}
-            className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-bold border-b-2 transition-colors"
+            className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-bold transition-colors"
             style={{
-              borderColor: tab === key ? accentColor : "transparent",
-              color: tab === key ? accentColor : "var(--muted-foreground)",
+              borderBottom: tab === key ? `2px solid ${ACID}` : "2px solid transparent",
+              color: tab === key ? ACID : "#79817d",
             }}
           >
             <Icon size={16} /> {label}
@@ -141,11 +139,11 @@ export default function Profile() {
       {loading ? (
         <div className="grid grid-cols-3 gap-0.5 animate-pulse">
           {[1,2,3,4,5,6].map(i => (
-            <div key={i} className="aspect-[9/16] bg-muted rounded-sm" />
+            <div key={i} className="aspect-[9/16]" style={{ background: "rgba(255,255,255,0.04)" }} />
           ))}
         </div>
       ) : displayPosts.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-muted-foreground text-sm gap-2">
+        <div className="flex flex-col items-center justify-center py-16 text-sm gap-2" style={{ color: "#79817d" }}>
           <div className="text-3xl">{tab === "loops" ? "🎬" : "❤️"}</div>
           <span>{tab === "loops" ? "No loops yet" : "No liked loops yet"}</span>
         </div>
@@ -159,13 +157,13 @@ export default function Profile() {
                 ? <video src={post.video_url} className="w-full h-full object-cover" muted />
                 : <div className="w-full h-full flex items-center justify-center text-3xl">{post.emoji || "🎬"}</div>
               }
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/30" />
+              <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent, rgba(0,0,0,0.3))" }} />
               <div className="absolute bottom-1.5 left-1.5">
                 <span className="text-white text-[10px] font-bold drop-shadow">▶ {fmtN(post.views_count || 0)}</span>
               </div>
               {tab === "loops" && (
                 <div className="absolute top-1.5 right-1.5">
-                  <span className="text-white text-[9px] bg-black/40 rounded px-1 py-0.5">✏️</span>
+                  <span className="text-white text-[9px] rounded px-1 py-0.5" style={{ background: "rgba(0,0,0,0.4)" }}>✏️</span>
                 </div>
               )}
             </div>

@@ -24,6 +24,7 @@ const BG_MAP = {
 };
 
 const ACID = "#00ff88";
+let currentPlayingVideo = null;
 
 function PostCard({ post, currentUser, onSaveChange, index, total }) {
   const navigate = useNavigate();
@@ -51,7 +52,16 @@ function PostCard({ post, currentUser, onSaveChange, index, total }) {
     const video = videoRef.current;
     if (!video) return;
     const observer = new IntersectionObserver(
-      ([entry]) => { entry.isIntersecting ? video.play().catch(() => {}) : video.pause(); },
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          if (currentPlayingVideo && currentPlayingVideo !== video) currentPlayingVideo.pause();
+          video.play().catch(() => {});
+          currentPlayingVideo = video;
+        } else {
+          video.pause();
+          if (currentPlayingVideo === video) currentPlayingVideo = null;
+        }
+      },
       { threshold: 0.6 }
     );
     observer.observe(video);
@@ -269,32 +279,63 @@ export default function Home() {
   const [currentUser, setCurrentUser] = useState(null);
   const [tab, setTab] = useState("foryou");
   const [followingIds, setFollowingIds] = useState(new Set());
+  const [blockedIds, setBlockedIds] = useState(new Set());
   const feedRef = useRef(null);
   const pullStartY = useRef(null);
   const [pullDistance, setPullDistance] = useState(0);
 
-  async function loadPosts() {
-    const data = await base44.entities.Post.filter({ is_draft: false }, "-created_date", 30);
-    setPosts(data);
-    return data;
+  async function loadFeed(silent = false) {
+    if (!currentUser) return;
+    if (!silent) setLoading(true);
+    try {
+      const blocks = await base44.entities.Block.filter({ blocker_id: currentUser.id });
+      const blocked = new Set(blocks.map(b => b.blocked_id));
+      setBlockedIds(blocked);
+
+      let data = [];
+      if (tab === "following") {
+        const follows = await base44.entities.Follow.filter({ follower_id: currentUser.id });
+        setFollowingIds(new Set(follows.map(f => f.following_id)));
+        if (follows.length > 0) {
+          data = await base44.entities.Post.filter(
+            { is_draft: false, visibility: "public", user_id: { $in: follows.map(f => f.following_id) } },
+            "-created_date", 30
+          );
+        }
+      } else if (tab === "popular") {
+        const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        data = await base44.entities.Post.filter(
+          { is_draft: false, visibility: "public", created_date: { $gte: weekAgo } },
+          "-likes_count", 30
+        );
+      } else {
+        data = await base44.entities.Post.filter(
+          { is_draft: false, visibility: "public" },
+          "-created_date", 30
+        );
+      }
+      setPosts(data.filter(p => !blocked.has(p.user_id)));
+    } catch {}
+    if (!silent) setLoading(false);
   }
 
   useEffect(() => {
-    Promise.all([base44.auth.me(), base44.entities.Post.filter({ is_draft: false }, "-created_date", 30)])
-      .then(async ([user, data]) => {
-        setCurrentUser(user);
-        setPosts(data);
-        if (user) {
-          const follows = await base44.entities.Follow.filter({ follower_id: user.id });
-          setFollowingIds(new Set(follows.map(f => f.following_id)));
-        }
-        setLoading(false);
-      }).catch(() => setLoading(false));
+    base44.auth.me().then(user => {
+      setCurrentUser(user);
+    }).catch(() => setLoading(false));
+  }, []);
 
-    // Real-time updates
+  useEffect(() => {
+    if (currentUser) loadFeed();
+  }, [currentUser, tab]);
+
+  useEffect(() => {
     const unsub = base44.entities.Post.subscribe((event) => {
-      if (event.type === "create" && event.data && !event.data.is_draft) {
-        setPosts(prev => [event.data, ...prev]);
+      if (tab === "following") return;
+      if (event.type === "create" && event.data && !event.data.is_draft && event.data.visibility === "public") {
+        if (!blockedIds.has(event.data.user_id)) {
+          setPosts(prev => [event.data, ...prev]);
+        }
       } else if (event.type === "update" && event.data) {
         setPosts(prev => prev.map(p => p.id === event.data.id ? { ...p, ...event.data } : p));
       } else if (event.type === "delete") {
@@ -302,7 +343,7 @@ export default function Home() {
       }
     });
     return unsub;
-  }, []);
+  }, [tab, blockedIds]);
 
   // Pull to refresh
   function onTouchStart(e) {
@@ -322,7 +363,7 @@ export default function Home() {
       setRefreshing(true);
       setPullDistance(0);
       pullStartY.current = null;
-      await loadPosts();
+      await loadFeed(true);
       setRefreshing(false);
     } else {
       setPullDistance(0);
@@ -330,9 +371,7 @@ export default function Home() {
     }
   }
 
-  const displayPosts = tab === "following"
-    ? posts.filter(p => followingIds.has(p.user_id))
-    : posts;
+  const displayPosts = posts;
 
   if (showVineReel) {
     return <WelcomeVineReel onFinish={() => {
@@ -366,7 +405,7 @@ export default function Home() {
           Loopd<span style={{ color: ACID }}>.</span>
         </div>
         <div className="flex items-center gap-6 pointer-events-auto">
-          {["foryou", "following"].map(tabKey => (
+          {["foryou", "following", "latest", "popular"].map(tabKey => (
             <button
               key={tabKey}
               onClick={() => setTab(tabKey)}
@@ -380,7 +419,7 @@ export default function Home() {
                 paddingBottom: 2,
               }}
             >
-              {tabKey === "foryou" ? t("for_you") : t("following")}
+              {tabKey === "foryou" ? t("for_you") : tabKey === "following" ? t("following") : tabKey === "latest" ? "Latest" : "Popular"}
             </button>
           ))}
         </div>

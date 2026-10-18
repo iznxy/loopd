@@ -2,12 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Search, Edit, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { useTheme } from "@/lib/ThemeContext";
 import { timeAgo, getAvColor, getInitials } from "@/lib/utils";
+
+const ACID = "#00ff88";
 
 export default function Messages() {
   const navigate = useNavigate();
-  const { accentColor } = useTheme();
   const [conversations, setConversations] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [users, setUsers] = useState([]);
@@ -15,17 +15,19 @@ export default function Messages() {
   const [loading, setLoading] = useState(true);
   const [showNewMsg, setShowNewMsg] = useState(false);
   const [userSearch, setUserSearch] = useState("");
+  const [blockedIds, setBlockedIds] = useState(new Set());
 
   useEffect(() => {
     base44.auth.me().then(async user => {
       setCurrentUser(user);
-      const [sent, received, allUsers] = await Promise.all([
+      const [sent, received, allUsers, blocks] = await Promise.all([
         base44.entities.Message.filter({ sender_id: user.id }, "-created_date", 100),
         base44.entities.Message.filter({ receiver_id: user.id }, "-created_date", 100),
         base44.entities.User.list("full_name", 50),
+        base44.entities.Block.filter({ blocker_id: user.id }),
       ]);
       setUsers(allUsers);
-      // Build conversation map
+      setBlockedIds(new Set(blocks.map(b => b.blocked_id)));
       const convMap = {};
       [...sent, ...received].forEach(msg => {
         const cid = msg.conversation_id;
@@ -55,21 +57,22 @@ export default function Messages() {
   });
 
   return (
-    <div className="flex flex-col h-screen bg-background">
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card flex-shrink-0">
-        <button onClick={() => navigate("/")}><ChevronLeft size={22} className="text-foreground" /></button>
-        <span className="flex-1 text-base font-bold text-foreground">Messages</span>
-        <button className="p-1" onClick={() => { setShowNewMsg(true); setUserSearch(""); }}><Edit size={18} className="text-foreground" /></button>
+    <div className="flex flex-col h-screen" style={{ background: "#090b0b" }}>
+      <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.12)" }}>
+        <button onClick={() => navigate("/")}><ChevronLeft size={22} style={{ color: "#f5f7f5" }} /></button>
+        <span className="flex-1 text-base font-bold" style={{ color: "#f5f7f5" }}>Messages</span>
+        <button className="p-1" onClick={() => { setShowNewMsg(true); setUserSearch(""); }}><Edit size={18} style={{ color: "#f5f7f5" }} /></button>
       </div>
 
-      <div className="px-4 py-2 bg-card border-b border-border flex-shrink-0">
-        <div className="flex items-center gap-2 bg-muted rounded-xl px-3 py-2">
-          <Search size={14} className="text-muted-foreground" />
+      <div className="px-4 py-2 flex-shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: "#121715", border: "1px solid rgba(255,255,255,0.12)" }}>
+          <Search size={14} style={{ color: "#79817d" }} />
           <input
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search messages…"
-            className="flex-1 bg-transparent text-sm text-foreground outline-none"
+            className="flex-1 bg-transparent text-sm outline-none"
+            style={{ color: "#f5f7f5" }}
           />
         </div>
       </div>
@@ -77,10 +80,10 @@ export default function Messages() {
       <div className="flex-1 overflow-y-auto hide-scrollbar">
         {loading ? (
           <div className="flex justify-center py-16">
-            <div className="w-7 h-7 border-4 border-muted border-t-primary rounded-full animate-spin" />
+            <div className="w-7 h-7 border-4 rounded-full animate-spin" style={{ borderColor: "rgba(255,255,255,0.12)", borderTopColor: ACID }} />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground text-sm">No conversations yet</div>
+          <div className="text-center py-16 text-sm" style={{ color: "#79817d" }}>No conversations yet</div>
         ) : (
           filtered.map(conv => {
             const other = getOtherUser(conv);
@@ -91,7 +94,8 @@ export default function Messages() {
               <div
                 key={conv.conversation_id}
                 onClick={() => navigate(`/chat/${conv.conversation_id}`)}
-                className="flex items-center gap-3 px-4 py-3.5 border-b border-border cursor-pointer active:bg-muted/50"
+                className="flex items-center gap-3 px-4 py-3.5 cursor-pointer active:bg-white/5"
+                style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
               >
                 <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm overflow-hidden flex-shrink-0"
                   style={{ background: avColor.bg, color: avColor.text }}>
@@ -100,44 +104,44 @@ export default function Messages() {
                     : getInitials(name)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className={`text-sm ${isUnread ? "font-bold text-foreground" : "font-medium text-foreground"}`}>{name}</div>
-                  <div className={`text-xs truncate mt-0.5 ${isUnread ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                  <div className="text-sm" style={{ fontWeight: isUnread ? 700 : 500, color: "#f5f7f5" }}>{name}</div>
+                  <div className="text-xs truncate mt-0.5" style={{ color: isUnread ? "#a1aaa5" : "#79817d" }}>
                     {conv.sender_id === currentUser?.id ? "You: " : ""}{conv.text || "Voice message"}
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <span className="text-[10px] text-muted-foreground">{timeAgo(conv.created_date)}</span>
-                  {isUnread && (
-                    <span className="w-2.5 h-2.5 rounded-full" style={{ background: accentColor }} />
-                  )}
+                  <span style={{ font: "10px ui-monospace, monospace", color: "#79817d" }}>{timeAgo(conv.created_date)}</span>
+                  {isUnread && <span className="w-2.5 h-2.5 rounded-full" style={{ background: ACID }} />}
                 </div>
               </div>
             );
           })
         )}
       </div>
+
       {/* New Message Modal */}
       {showNewMsg && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-background">
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-card flex-shrink-0">
-            <button onClick={() => setShowNewMsg(false)}><X size={22} className="text-foreground" /></button>
-            <span className="flex-1 text-base font-bold text-foreground">New Message</span>
+        <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "#090b0b" }}>
+          <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.12)" }}>
+            <button onClick={() => setShowNewMsg(false)}><X size={22} style={{ color: "#f5f7f5" }} /></button>
+            <span className="flex-1 text-base font-bold" style={{ color: "#f5f7f5" }}>New Message</span>
           </div>
-          <div className="px-4 py-2 border-b border-border flex-shrink-0">
-            <div className="flex items-center gap-2 bg-muted rounded-xl px-3 py-2">
-              <Search size={14} className="text-muted-foreground" />
+          <div className="px-4 py-2 flex-shrink-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: "#121715", border: "1px solid rgba(255,255,255,0.12)" }}>
+              <Search size={14} style={{ color: "#79817d" }} />
               <input
                 autoFocus
                 value={userSearch}
                 onChange={e => setUserSearch(e.target.value)}
                 placeholder="Search people…"
-                className="flex-1 bg-transparent text-sm text-foreground outline-none"
+                className="flex-1 bg-transparent text-sm outline-none"
+                style={{ color: "#f5f7f5" }}
               />
             </div>
           </div>
           <div className="flex-1 overflow-y-auto hide-scrollbar">
             {users
-              .filter(u => u.id !== currentUser?.id)
+              .filter(u => u.id !== currentUser?.id && !blockedIds.has(u.id))
               .filter(u => {
                 const name = u.full_name || u.email?.split("@")[0] || "";
                 return name.toLowerCase().includes(userSearch.toLowerCase());
@@ -153,21 +157,22 @@ export default function Messages() {
                       setShowNewMsg(false);
                       navigate(`/chat/${convId}`);
                     }}
-                    className="flex items-center gap-3 px-4 py-3.5 border-b border-border cursor-pointer active:bg-muted/50"
+                    className="flex items-center gap-3 px-4 py-3.5 cursor-pointer active:bg-white/5"
+                    style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
                   >
                     <div className="w-11 h-11 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0"
                       style={{ background: avColor.bg, color: avColor.text }}>
                       {getInitials(name)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-foreground">{name}</div>
-                      {u.email && <div className="text-xs text-muted-foreground truncate">{u.email}</div>}
+                      <div className="text-sm font-medium" style={{ color: "#f5f7f5" }}>{name}</div>
+                      {u.email && <div className="text-xs truncate" style={{ color: "#79817d" }}>{u.email}</div>}
                     </div>
                   </div>
                 );
               })}
-            {users.filter(u => u.id !== currentUser?.id).length === 0 && (
-              <div className="text-center py-16 text-muted-foreground text-sm">No users found</div>
+            {users.filter(u => u.id !== currentUser?.id && !blockedIds.has(u.id)).length === 0 && (
+              <div className="text-center py-16 text-sm" style={{ color: "#79817d" }}>No users found</div>
             )}
           </div>
         </div>
