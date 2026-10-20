@@ -20,14 +20,18 @@ export default function Messages() {
   useEffect(() => {
     base44.auth.me().then(async user => {
       setCurrentUser(user);
-      const [sent, received, allUsers, blocks] = await Promise.all([
+      const [sent, received, allUsers, blocks, mutes] = await Promise.all([
         base44.entities.Message.filter({ sender_id: user.id }, "-created_date", 100),
         base44.entities.Message.filter({ receiver_id: user.id }, "-created_date", 100),
         base44.entities.User.list("full_name", 50),
         base44.entities.Block.filter({ blocker_id: user.id }),
+        base44.entities.Mute.filter({ muter_id: user.id }),
       ]);
       setUsers(allUsers);
-      setBlockedIds(new Set(blocks.map(b => b.blocked_id)));
+      setBlockedIds(new Set([
+        ...blocks.map(b => b.blocked_id),
+        ...mutes.map(m => m.muted_id),
+      ]));
       const convMap = {};
       [...sent, ...received].forEach(msg => {
         const cid = msg.conversation_id;

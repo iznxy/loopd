@@ -35,28 +35,64 @@ export default function Explore() {
   const [activeTab, setActiveTab] = useState("top");
   const [currentUser, setCurrentUser] = useState(null);
   const [followingIds, setFollowingIds] = useState(new Set());
-  const [blockedIds, setBlockedIds] = useState(new Set());
+  const [excludedIds, setExcludedIds] = useState(new Set());
 
+  // Load the viewer's block + mute lists BEFORE any content, so excluded posts never render
   useEffect(() => {
-    Promise.all([
-      base44.entities.Post.filter({ is_draft: false, visibility: "public" }, "-views_count", 60),
-      base44.entities.User.list("full_name", 30),
-      base44.auth.me(),
-    ]).then(async ([p, u, me]) => {
-      setPosts(p);
-      setUsers(u);
-      setCurrentUser(me);
-      if (me) {
-        const [follows, blocks] = await Promise.all([
-          base44.entities.Follow.filter({ follower_id: me.id }),
-          base44.entities.Block.filter({ blocker_id: me.id }),
+    let active = true;
+    (async () => {
+      try {
+        const me = await base44.auth.me();
+        if (!active) return;
+        setCurrentUser(me);
+        let excluded = new Set();
+        if (me) {
+          const [follows, blocks, mutes] = await Promise.all([
+            base44.entities.Follow.filter({ follower_id: me.id }),
+            base44.entities.Block.filter({ blocker_id: me.id }),
+            base44.entities.Mute.filter({ muter_id: me.id }),
+          ]);
+          if (!active) return;
+          setFollowingIds(new Set(follows.map(f => f.following_id)));
+          excluded = new Set([
+            ...blocks.map(b => b.blocked_id),
+            ...mutes.map(m => m.muted_id),
+          ]);
+          setExcludedIds(excluded);
+        }
+        const [p, u] = await Promise.all([
+          base44.entities.Post.filter({ is_draft: false, visibility: "public" }, "-views_count", 60),
+          base44.entities.User.list("full_name", 30),
         ]);
-        setFollowingIds(new Set(follows.map(f => f.following_id)));
-        setBlockedIds(new Set(blocks.map(b => b.blocked_id)));
-      }
-      setLoading(false);
-    }).catch(() => setLoading(false));
+        if (!active) return;
+        setPosts(p.filter(post => !excluded.has(post.user_id)));
+        setUsers(u);
+      } catch {}
+      if (active) setLoading(false);
+    })();
+    return () => { active = false; };
   }, []);
+
+  // Re-apply exclusions when the viewer returns (e.g. after blocking or muting someone)
+  useEffect(() => {
+    if (!currentUser) return;
+    async function refresh() {
+      try {
+        const [blocks, mutes] = await Promise.all([
+          base44.entities.Block.filter({ blocker_id: currentUser.id }),
+          base44.entities.Mute.filter({ muter_id: currentUser.id }),
+        ]);
+        const excluded = new Set([
+          ...blocks.map(b => b.blocked_id),
+          ...mutes.map(m => m.muted_id),
+        ]);
+        setExcludedIds(excluded);
+        setPosts(prev => prev.filter(p => !excluded.has(p.user_id)));
+      } catch {}
+    }
+    window.addEventListener("focus", refresh);
+    return () => window.removeEventListener("focus", refresh);
+  }, [currentUser]);
 
   // Debounced server-side search
   useEffect(() => {
@@ -73,16 +109,15 @@ export default function Explore() {
             { username: { $regex: query, $options: "i" } },
           ],
         }, "-created_date", 30);
-        setPosts(results.filter(p => !blockedIds.has(p.user_id)));
+        setPosts(results.filter(p => !excludedIds.has(p.user_id)));
       } catch {}
       setSearchLoading(false);
     }, 350);
     return () => clearTimeout(timer);
-  }, [query, blockedIds]);
+  }, [query, excludedIds]);
 
   async function handleFollow(u) {
     if (!currentUser) return;
-    const uname = u.full_name || u.email?.split("@")[0] || "user";
     if (followingIds.has(u.id)) {
       const follows = await base44.entities.Follow.filter({ follower_id: currentUser.id, following_id: u.id });
       if (follows.length > 0) await base44.entities.Follow.delete(follows[0].id);
@@ -98,12 +133,13 @@ export default function Explore() {
     }
   }
 
-  const filteredUsers = query
+  const filteredUsers = (query
     ? users.filter(u =>
         u.full_name?.toLowerCase().includes(query.toLowerCase()) ||
         u.email?.toLowerCase().includes(query.toLowerCase())
-      ).filter(u => !blockedIds.has(u.id))
-    : users.filter(u => !blockedIds.has(u.id));
+      )
+    : users
+  ).filter(u => !excludedIds.has(u.id));
 
   return (
     <div className="flex flex-col h-full" style={{ background: "#090b0b" }}>

@@ -3,19 +3,47 @@
   "type": "object",
   "properties": {
     "conversation_id": {
-      "type": "string"
+      "type": "string",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     },
     "sender_id": {
-      "type": "string"
+      "type": "string",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     },
     "sender_username": {
       "type": "string"
     },
     "receiver_id": {
-      "type": "string"
+      "type": "string",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     },
     "text": {
-      "type": "string"
+      "type": "string",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     },
     "audio_url": {
       "type": "string"

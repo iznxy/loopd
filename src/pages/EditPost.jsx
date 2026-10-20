@@ -110,7 +110,6 @@ export default function EditPost() {
           <div className="flex gap-2">
             {[
               { v: "public", label: "🌍 Public" },
-              { v: "friends", label: "👥 Friends" },
               { v: "private", label: "🔒 Private" },
             ].map(opt => (
               <button
