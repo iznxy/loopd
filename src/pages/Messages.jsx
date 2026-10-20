@@ -177,7 +177,8 @@ export default function Messages() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium" style={{ color: "#f5f7f5" }}>{name}</div>
-                      {u.email && <div className="text-xs truncate" style={{ color: "#79817d" }}>{u.email}</div>}
+                      {/* Show the public handle, never the account's email address */}
+                      {u.email && <div className="text-xs truncate" style={{ color: "#79817d" }}>@{u.email.split("@")[0]}</div>}
                     </div>
                   </div>
                 );

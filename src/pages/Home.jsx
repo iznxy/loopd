@@ -345,7 +345,12 @@ export default function Home() {
       const items = (Array.isArray(res) ? res : (res.items || [])).filter(p => !excluded.has(p.user_id));
       if (myLikes) setLikedMap(Object.fromEntries(myLikes.map(l => [l.post_id, l.id])));
       if (mySaves) setSavedMap(Object.fromEntries(mySaves.map(s => [s.post_id, s.id])));
-      setPosts(prev => append ? [...prev, ...items] : items);
+      // Pagination and the live subscription can both surface the same post — de-duplicate by id
+      setPosts(prev => {
+        if (!append) return items;
+        const seen = new Set(prev.map(p => p.id));
+        return [...prev, ...items.filter(p => !seen.has(p.id))];
+      });
       setNextCursor(Array.isArray(res) ? null : (res.next_cursor || null));
       setHasMore(Array.isArray(res) ? false : !!res.has_more);
     } catch {}
@@ -367,7 +372,7 @@ export default function Home() {
       if (tab === "following") return;
       if (event.type === "create" && event.data && !event.data.is_draft && event.data.visibility === "public") {
         if (!blockedIds.has(event.data.user_id)) {
-          setPosts(prev => [event.data, ...prev]);
+          setPosts(prev => prev.some(p => p.id === event.data.id) ? prev : [event.data, ...prev]);
         }
       } else if (event.type === "update" && event.data) {
         setPosts(prev => prev.map(p => p.id === event.data.id ? { ...p, ...event.data } : p));

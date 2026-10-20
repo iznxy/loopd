@@ -67,7 +67,7 @@ export default function CreatorProfile() {
   }, [username]);
 
   async function toggleFollow() {
-    if (!currentUser || !creator) return;
+    if (!currentUser || !creator || creator.id === currentUser.id) return;
     if (isFollowing) {
       const follows = await base44.entities.Follow.filter({ follower_id: currentUser.id, following_id: creator.id });
       if (follows.length > 0) await base44.entities.Follow.delete(follows[0].id);
@@ -92,7 +92,7 @@ export default function CreatorProfile() {
   }
 
   async function toggleBlock() {
-    if (!currentUser || !creator) return;
+    if (!currentUser || !creator || creator.id === currentUser.id) return;
     setShowMenu(false);
     if (isBlocked) {
       const blocks = await base44.entities.Block.filter({ blocker_id: currentUser.id, blocked_id: creator.id });
@@ -111,7 +111,7 @@ export default function CreatorProfile() {
   }
 
   async function toggleMute() {
-    if (!currentUser || !creator) return;
+    if (!currentUser || !creator || creator.id === currentUser.id) return;
     setShowMenu(false);
     if (isMuted) {
       const mutes = await base44.entities.Mute.filter({ muter_id: currentUser.id, muted_id: creator.id });
@@ -124,7 +124,7 @@ export default function CreatorProfile() {
   }
 
   function startChat() {
-    if (!currentUser || !creator) return;
+    if (!currentUser || !creator || creator.id === currentUser.id) return;
     const ids = [currentUser.id, creator.id].sort();
     navigate(`/chat/${ids.join("_")}`);
   }

@@ -76,7 +76,11 @@ export default function Explore() {
   // Re-apply exclusions when the viewer returns (e.g. after blocking or muting someone)
   useEffect(() => {
     if (!currentUser) return;
+    let lastRun = 0;
     async function refresh() {
+      // `focus` fires on every tab/window switch — throttle so it can't become a request storm
+      if (Date.now() - lastRun < 30000) return;
+      lastRun = Date.now();
       try {
         const [blocks, mutes] = await Promise.all([
           base44.entities.Block.filter({ blocker_id: currentUser.id }),
