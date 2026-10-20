@@ -44,7 +44,8 @@ export default function TipModal({ creator, onClose }) {
 
         <div className="px-5">
           <div className="text-base font-bold text-foreground mb-0.5">Send a Tip 💝</div>
-          <div className="text-xs text-muted-foreground mb-4">Support @{creator.username || creator.email?.split("@")[0]}</div>
+          <div className="text-xs text-muted-foreground">Support @{creator.username || creator.email?.split("@")[0]}</div>
+          <div className="text-[11px] text-amber-500 mt-1 mb-4">No payment is processed — this records an in-app tip only.</div>
 
           <div className="grid grid-cols-3 gap-3 mb-5">
             {TIPS.map((tip, i) => (
@@ -70,7 +71,7 @@ export default function TipModal({ creator, onClose }) {
             className="w-full py-3.5 rounded-2xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-all"
             style={{ background: selected !== null ? accentColor : "var(--muted)", color: selected !== null ? "#fff" : "var(--muted-foreground)" }}
           >
-            {sent ? <><Check size={16} /> Tip Sent!</> : sending ? "Sending…" : selected !== null ? `Send ${TIPS[selected].c} $${TIPS[selected].p}` : "Select a tip"}
+            {sent ? <><Check size={16} /> Tip Recorded</> : sending ? "Recording…" : selected !== null ? `Send ${TIPS[selected].c} $${TIPS[selected].p}` : "Select a tip"}
           </button>
         </div>
       </div>

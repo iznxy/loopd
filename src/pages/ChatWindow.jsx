@@ -22,6 +22,7 @@ export default function ChatWindow() {
   const [showEmoji, setShowEmoji] = useState(false);
   const [recording, setRecording] = useState(false);
   const [inCall, setInCall] = useState(false);
+  const [iBlockedThem, setIBlockedThem] = useState(false);
 
   const bottomRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -32,9 +33,15 @@ export default function ChatWindow() {
       setCurrentUser(user);
       const parts = conversationId.split("_");
       const otherId = parts[0] === user.id ? parts[1] : parts[0];
-      const allUsers = await base44.entities.User.list();
-      const other = allUsers.find(u => u.id === otherId);
-      setOtherUser(other);
+      // Targeted lookup instead of pulling the whole user directory
+      const [found] = await base44.entities.User.filter({ id: otherId });
+      setOtherUser(found || null);
+
+      // Block gate. IMPORTANT: this is a UI gate only, not a security boundary.
+      // Block rows are readable only by the person who created them, so "they blocked me"
+      // cannot be detected from the client, and Message.create remains directly callable.
+      const myBlocks = await base44.entities.Block.filter({ blocker_id: user.id, blocked_id: otherId });
+      setIBlockedThem(myBlocks.length > 0);
 
       const [msgs, reads] = await Promise.all([
         base44.entities.Message.filter({ conversation_id: conversationId }, "created_date", 100),
@@ -67,7 +74,7 @@ export default function ChatWindow() {
   }, [messages]);
 
   async function sendMessage(override = {}) {
-    if (!currentUser || !otherUser) return;
+    if (!currentUser || !otherUser || iBlockedThem) return;
     const payload = {
       conversation_id: conversationId,
       sender_id: currentUser.id,
@@ -195,6 +202,12 @@ export default function ChatWindow() {
       {showGif && <GifPicker onSelect={handleGifSelect} onClose={() => setShowGif(false)} />}
 
       {/* Input bar */}
+      {iBlockedThem ? (
+        <div className="px-4 py-4 border-t border-border glass-strong flex-shrink-0 text-center">
+          <div className="text-sm font-bold text-foreground mb-1">You blocked this account</div>
+          <div className="text-xs text-muted-foreground">Unblock them from their profile to send messages.</div>
+        </div>
+      ) : (
       <div className="flex items-center gap-2 px-3 py-2 border-t border-border glass-strong flex-shrink-0">
         <button onClick={() => { setShowEmoji(v => !v); setShowGif(false); }} className="p-1.5">
           <Smile size={20} className="text-muted-foreground" />
@@ -226,6 +239,7 @@ export default function ChatWindow() {
           </button>
         )}
       </div>
+      )}
     </div>
   );
 }

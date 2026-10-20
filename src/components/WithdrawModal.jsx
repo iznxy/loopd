@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { X, DollarSign, CreditCard, Smartphone, CheckCircle, AlertCircle } from "lucide-react";
+import { X, DollarSign, CheckCircle, AlertCircle } from "lucide-react";
 import { useTheme } from "@/lib/ThemeContext";
 import { base44 } from "@/api/base44Client";
 
@@ -21,7 +21,6 @@ export default function WithdrawModal({ balance, onClose, onSuccess }) {
 
   const minWithdraw = 10;
   const parsedAmount = parseFloat(amount) || 0;
-  const canProceedStep1 = parsedAmount >= minWithdraw && parsedAmount <= balance;
   const canProceedStep2 = method && details.trim().length > 3;
 
   async function submitWithdrawal() {
@@ -59,8 +58,12 @@ export default function WithdrawModal({ balance, onClose, onSuccess }) {
           {/* Step 1 — Amount */}
           {step === 1 && (
             <div className="space-y-5">
+              <div className="rounded-xl p-3 border border-amber-500/40 bg-amber-500/10 text-xs leading-relaxed text-amber-500">
+                Withdrawals are disabled. Tips are unverified in-app records, not confirmed payments,
+                so no payout can be issued.
+              </div>
               <div className="bg-muted rounded-2xl p-4 text-center">
-                <div className="text-xs text-muted-foreground mb-1">Available balance</div>
+                <div className="text-xs text-muted-foreground mb-1">Unverified tip records</div>
                 <div className="text-3xl font-bold text-foreground">${balance.toFixed(2)}</div>
               </div>
               <div>
@@ -114,12 +117,11 @@ export default function WithdrawModal({ balance, onClose, onSuccess }) {
                 </button>
               </div>
               <button
-                onClick={() => canProceedStep1 && setStep(2)}
-                disabled={!canProceedStep1}
-                className="w-full py-4 rounded-2xl text-white font-bold text-sm"
-                style={{ background: canProceedStep1 ? accentColor : "var(--muted)", color: canProceedStep1 ? "#fff" : "var(--muted-foreground)" }}
+                disabled
+                className="w-full py-4 rounded-2xl font-bold text-sm cursor-not-allowed"
+                style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}
               >
-                Continue →
+                Withdrawals unavailable
               </button>
             </div>
           )}

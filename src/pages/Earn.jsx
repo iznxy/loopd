@@ -1,23 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, DollarSign, TrendingUp, Gift, ArrowDownToLine } from "lucide-react";
+import { ChevronLeft, ArrowDownToLine } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 import { fmtN } from "@/lib/utils";
 import { TIPS } from "@/lib/constants";
-import WithdrawModal from "@/components/WithdrawModal";
 
 export default function Earn() {
   const navigate = useNavigate();
   const { accentColor } = useTheme();
   const [tips, setTips] = useState([]);
-  const [user, setUser] = useState(null);
-  const [showWithdraw, setShowWithdraw] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(u => {
       if (!u) return;
-      setUser(u);
       base44.entities.Tip.filter({ to_user_id: u.id }, "-created_date", 20).then(setTips);
     });
   }, []);
@@ -34,21 +30,27 @@ export default function Earn() {
       </div>
 
       <div className="p-4 space-y-4">
-        {/* Balance card */}
+        {/* Monetization is not yet available — these are unverified records, never a payout balance */}
+        <div className="rounded-2xl p-4 border border-amber-500/40 bg-amber-500/10">
+          <div className="text-sm font-bold text-amber-500 mb-1">Monetization isn't available yet</div>
+          <p className="text-xs text-amber-500/90 leading-relaxed">
+            The tips below are in-app records only. No payment is processed, so they are not verified
+            revenue and cannot be withdrawn. Withdrawals stay disabled until a payment can be confirmed
+            on the server.
+          </p>
+        </div>
+
+        {/* Recorded tips */}
         <div className="rounded-2xl p-5 text-white" style={{ background: accentColor }}>
-          <div className="text-sm font-medium opacity-80 mb-1">Total Earned</div>
+          <div className="text-sm font-medium opacity-80 mb-1">Recorded Tips (unverified)</div>
           <div className="text-4xl font-bold font-display">${totalEarned.toFixed(2)}</div>
-          <div className="text-sm opacity-80 mt-1">{tips.length} tips received</div>
+          <div className="text-sm opacity-80 mt-1">{tips.length} tip records · not verified payments</div>
           <button
-            onClick={() => setShowWithdraw(true)}
-            disabled={totalEarned < 10}
-            className="mt-4 flex items-center gap-2 bg-white/20 hover:bg-white/30 text-white text-sm font-bold px-4 py-2.5 rounded-xl transition-all disabled:opacity-40"
+            disabled
+            className="mt-4 flex items-center gap-2 bg-white/20 text-white text-sm font-bold px-4 py-2.5 rounded-xl opacity-40 cursor-not-allowed"
           >
-            <ArrowDownToLine size={16} /> Withdraw Earnings
+            <ArrowDownToLine size={16} /> Withdrawals unavailable
           </button>
-          {totalEarned < 10 && (
-            <p className="text-white/60 text-[11px] mt-1.5">Minimum $10 to withdraw</p>
-          )}
         </div>
 
         {/* Stats */}
@@ -102,13 +104,6 @@ export default function Earn() {
         )}
       </div>
 
-      {showWithdraw && (
-        <WithdrawModal
-          balance={totalEarned}
-          onClose={() => setShowWithdraw(false)}
-          onSuccess={() => setShowWithdraw(false)}
-        />
-      )}
     </div>
   );
 }
