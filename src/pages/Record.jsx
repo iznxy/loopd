@@ -63,7 +63,7 @@ export default function Record() {
   }, [facingMode]);
 
   function startRecording() {
-    if (!streamRef.current) return;
+    if (!streamRef.current || uploading) return;
     chunksRef.current = [];
     const mimeType = getSupportedMimeType();
     let mr;
@@ -114,7 +114,7 @@ export default function Record() {
 
   async function handleGalleryUpload(e) {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file || uploading) return;
     setUploading(true);
     setError("");
     try {
@@ -174,7 +174,8 @@ export default function Record() {
       {/* Record button */}
       <div className="absolute bottom-16 left-0 right-0 flex items-center justify-center">
         <button
-          onPointerDown={startRecording}
+          disabled={uploading}
+          onPointerDown={uploading ? undefined : startRecording}
           onPointerUp={recording ? stopRecording : undefined}
           className="relative w-20 h-20 rounded-full border-4 border-white flex items-center justify-center"
           style={{ background: recording ? ACID : "transparent" }}

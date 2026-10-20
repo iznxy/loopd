@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, Share2, Bookmark, Music2, Volume2, VolumeX, Download } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
-import { fmtN, getAvColor, getInitials } from "@/lib/utils";
+import { fmtN } from "@/lib/utils";
 import CommentsPanel from "@/components/CommentsPanel";
 import ShareSheet from "@/components/ShareSheet";
 import { getFilterStyle } from "@/components/VideoFilters";
@@ -35,7 +35,9 @@ function PostCard({ post, currentUser, onSaveChange, index, total }) {
   const [muted, setMuted] = useState(true);
   const [showComments, setShowComments] = useState(false);
   const [showShare, setShowShare] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   const videoRef = useRef(null);
+  const clickTimer = useRef(null);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -76,13 +78,13 @@ function PostCard({ post, currentUser, onSaveChange, index, total }) {
       setLikesCount(c => Math.max(0, c - 1));
       const likes = await base44.entities.Like.filter({ post_id: post.id, user_id: currentUser.id });
       if (likes.length > 0) await base44.entities.Like.delete(likes[0].id);
-      await base44.entities.Post.update(post.id, { likes_count: Math.max(0, (post.likes_count || 0) - 1) });
+      base44.entities.Post.update(post.id, { likes_count: Math.max(0, (post.likes_count || 0) - 1) }).catch(() => {});
     } else {
       setLiked(true);
       setLikesCount(c => c + 1);
       haptic("success");
       await base44.entities.Like.create({ post_id: post.id, user_id: currentUser.id, username: currentUser.email?.split("@")[0] });
-      await base44.entities.Post.update(post.id, { likes_count: (post.likes_count || 0) + 1 });
+      base44.entities.Post.update(post.id, { likes_count: (post.likes_count || 0) + 1 }).catch(() => {});
       if (post.user_id && post.user_id !== currentUser.id) {
         base44.entities.Notification.create({
           user_id: post.user_id,
@@ -124,7 +126,20 @@ function PostCard({ post, currentUser, onSaveChange, index, total }) {
     document.body.removeChild(a);
   }
 
+  function handleTap() {
+    if (clickTimer.current) return;
+    clickTimer.current = setTimeout(() => {
+      clickTimer.current = null;
+      const v = videoRef.current;
+      if (!v) return;
+      if (v.paused) v.play().catch(() => {});
+      else v.pause();
+    }, 260);
+  }
+
   function handleDoubleTap() {
+    clearTimeout(clickTimer.current);
+    clickTimer.current = null;
     if (!liked) handleLike();
     setShowHeart(true);
     setTimeout(() => setShowHeart(false), 900);
@@ -144,17 +159,19 @@ function PostCard({ post, currentUser, onSaveChange, index, total }) {
     <div
       className="relative w-full flex-shrink-0"
       style={{ height: "100svh", scrollSnapAlign: "start", scrollSnapStop: "always" }}
+      onClick={handleTap}
       onDoubleClick={handleDoubleTap}
     >
       {/* Background */}
       <div className="absolute inset-0" style={{ background: BG_MAP[post.bg_class] || "#121716" }}>
-        {post.video_url
+        {post.video_url && !videoError
           ? <video
               ref={videoRef}
               src={post.video_url}
               className="w-full h-full object-cover"
               loop muted={muted} playsInline
               style={filterStyle}
+              onError={() => setVideoError(true)}
             />
           : <div className="w-full h-full flex items-center justify-center text-8xl" style={filterStyle}>
               {post.emoji || "🎬"}
@@ -280,41 +297,51 @@ export default function Home() {
   const [tab, setTab] = useState("foryou");
   const [followingIds, setFollowingIds] = useState(new Set());
   const [blockedIds, setBlockedIds] = useState(new Set());
+  const [nextCursor, setNextCursor] = useState(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const feedRef = useRef(null);
+  const sentinelRef = useRef(null);
   const pullStartY = useRef(null);
   const [pullDistance, setPullDistance] = useState(0);
 
-  async function loadFeed(silent = false) {
+  async function loadFeed(silent = false, append = false) {
     if (!currentUser) return;
-    if (!silent) setLoading(true);
+    if (!silent && !append) setLoading(true);
     try {
-      const blocks = await base44.entities.Block.filter({ blocker_id: currentUser.id });
-      const blocked = new Set(blocks.map(b => b.blocked_id));
-      setBlockedIds(blocked);
+      const [blocks, mutes] = await Promise.all([
+        base44.entities.Block.filter({ blocker_id: currentUser.id }),
+        base44.entities.Mute.filter({ muter_id: currentUser.id }),
+      ]);
+      const excluded = new Set([
+        ...blocks.map(b => b.blocked_id),
+        ...mutes.map(m => m.muted_id),
+      ]);
+      setBlockedIds(excluded);
 
-      let data = [];
+      let query = { is_draft: false, visibility: "public" };
+      let sort = "-created_date";
       if (tab === "following") {
         const follows = await base44.entities.Follow.filter({ follower_id: currentUser.id });
-        setFollowingIds(new Set(follows.map(f => f.following_id)));
-        if (follows.length > 0) {
-          data = await base44.entities.Post.filter(
-            { is_draft: false, visibility: "public", user_id: { $in: follows.map(f => f.following_id) } },
-            "-created_date", 30
-          );
+        const ids = follows.map(f => f.following_id);
+        setFollowingIds(new Set(ids));
+        if (ids.length === 0) {
+          setPosts([]); setHasMore(false); setNextCursor(null);
+          if (!silent) setLoading(false);
+          return;
         }
+        query = { ...query, user_id: { $in: ids } };
       } else if (tab === "popular") {
         const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-        data = await base44.entities.Post.filter(
-          { is_draft: false, visibility: "public", created_date: { $gte: weekAgo } },
-          "-likes_count", 30
-        );
-      } else {
-        data = await base44.entities.Post.filter(
-          { is_draft: false, visibility: "public" },
-          "-created_date", 30
-        );
+        query = { ...query, created_date: { $gte: weekAgo } };
+        sort = "-likes_count";
       }
-      setPosts(data.filter(p => !blocked.has(p.user_id)));
+
+      const res = await base44.entities.Post.filter(query, { sort, limit: 20, cursor: append ? nextCursor : undefined });
+      const items = (Array.isArray(res) ? res : (res.items || [])).filter(p => !excluded.has(p.user_id));
+      setPosts(prev => append ? [...prev, ...items] : items);
+      setNextCursor(Array.isArray(res) ? null : (res.next_cursor || null));
+      setHasMore(Array.isArray(res) ? false : !!res.has_more);
     } catch {}
     if (!silent) setLoading(false);
   }
@@ -344,6 +371,21 @@ export default function Home() {
     });
     return unsub;
   }, [tab, blockedIds]);
+
+  // Incremental loading sentinel
+  useEffect(() => {
+    if (!hasMore || loadingMore) return;
+    const node = sentinelRef.current;
+    const root = feedRef.current;
+    if (!node || !root) return;
+    const obs = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      setLoadingMore(true);
+      loadFeed(true, true).finally(() => setLoadingMore(false));
+    }, { root, threshold: 0.1 });
+    obs.observe(node);
+    return () => obs.disconnect();
+  }, [hasMore, loadingMore, nextCursor, posts.length]);
 
   // Pull to refresh
   function onTouchStart(e) {
@@ -479,15 +521,22 @@ export default function Home() {
               <div className="text-sm" style={{ color: "#929a96" }}>Follow more creators to see their loops here</div>
             </div>
           ) : (
-            displayPosts.map((post, i) => (
-              <PostCard
-                key={post.id}
-                post={post}
-                currentUser={currentUser}
-                index={i}
-                total={displayPosts.length}
-              />
-            ))
+            <>
+              {displayPosts.map((post, i) => (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  currentUser={currentUser}
+                  index={i}
+                  total={displayPosts.length}
+                />
+              ))}
+              {hasMore && (
+                <div ref={sentinelRef} className="w-full flex items-center justify-center" style={{ minHeight: 96, background: "#090b0b" }}>
+                  <div className="w-6 h-6 border-4 rounded-full animate-spin" style={{ borderColor: "rgba(255,255,255,0.12)", borderTopColor: ACID }} />
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { X, Link, Download, Copy, Check } from "lucide-react";
-import { useTheme } from "@/lib/ThemeContext";
+import { Link, Download, Check, Flag } from "lucide-react";
+import ReportModal from "@/components/ReportModal";
+
+const ACID = "#00ff88";
 
 // Latest social media brand colors & SVG logos
 const SOCIAL_PLATFORMS = [
@@ -67,8 +69,8 @@ const SOCIAL_PLATFORMS = [
 ];
 
 export default function ShareSheet({ post, onClose }) {
-  const { accentColor } = useTheme();
   const [copied, setCopied] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   const shareUrl = `${window.location.origin}/creator/${post.username}`;
   const shareText = post.caption ? `Check out this loop: ${post.caption}` : "Check out this loop on Loopd!";
@@ -106,15 +108,16 @@ export default function ShareSheet({ post, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end bg-black/60" onClick={onClose}>
       <div
-        className="w-full bg-card rounded-t-3xl pb-6 animate-slide-up"
+        className="w-full rounded-t-3xl pb-6 animate-slide-up"
+        style={{ background: "#0d1110", borderTop: "1px solid rgba(255,255,255,0.12)" }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="w-10 h-1 bg-border rounded-full mx-auto mt-3 mb-4" />
+        <div className="w-10 h-1 rounded-full mx-auto mt-3 mb-4" style={{ background: "rgba(255,255,255,0.2)" }} />
         <div className="px-5 mb-4">
-          <div className="text-sm font-bold text-foreground mb-1">Share Loop</div>
-          <div className="text-xs text-muted-foreground truncate">@{post.username}</div>
+          <div className="text-sm font-bold mb-1" style={{ color: "#f5f7f5" }}>Share Loop</div>
+          <div className="text-xs truncate" style={{ color: "#79817d" }}>@{post.username}</div>
         </div>
 
         {/* Social platforms */}
@@ -127,11 +130,11 @@ export default function ShareSheet({ post, onClose }) {
               rel="noopener noreferrer"
               className="flex flex-col items-center gap-1.5 flex-shrink-0"
             >
-              <div className="w-13 h-13 w-12 h-12 rounded-2xl flex items-center justify-center text-white"
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white"
                 style={{ background: p.color }}>
                 {p.icon}
               </div>
-              <span className="text-[10px] text-muted-foreground">{p.name}</span>
+              <span className="text-[10px]" style={{ color: "#79817d" }}>{p.name}</span>
             </a>
           ))}
         </div>
@@ -140,32 +143,41 @@ export default function ShareSheet({ post, onClose }) {
         <div className="px-5 mt-4 space-y-2">
           <button
             onClick={copyLink}
-            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-muted text-sm font-medium text-foreground"
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-medium"
+            style={{ background: "#121715", border: "1px solid rgba(255,255,255,0.12)", color: "#f5f7f5" }}
           >
-            {copied ? <Check size={18} style={{ color: accentColor }} /> : <Link size={18} className="text-muted-foreground" />}
+            {copied ? <Check size={18} style={{ color: ACID }} /> : <Link size={18} style={{ color: "#79817d" }} />}
             {copied ? "Link copied!" : "Copy link"}
           </button>
           {post.video_url && (
             <button
               onClick={handleDownload}
-              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl bg-muted text-sm font-medium"
-              style={{ color: post.allow_downloads ? "var(--foreground)" : "var(--muted-foreground)" }}
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-medium"
+              style={{ background: "#121715", border: "1px solid rgba(255,255,255,0.12)", color: post.allow_downloads ? "#f5f7f5" : "#79817d" }}
             >
-              <Download size={18} className={post.allow_downloads ? "text-foreground" : "text-muted-foreground"} />
+              <Download size={18} style={{ color: post.allow_downloads ? "#f5f7f5" : "#79817d" }} />
               {post.allow_downloads ? "Download loop" : "Downloads disabled by creator"}
             </button>
           )}
           {navigator.share && (
             <button
               onClick={nativeShare}
-              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold text-white"
-              style={{ background: accentColor }}
+              className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold"
+              style={{ background: ACID, color: "#07110c" }}
             >
               <Share2Icon /> More options
             </button>
           )}
+          <button
+            onClick={() => setShowReport(true)}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-medium"
+            style={{ background: "#121715", border: "1px solid rgba(255,255,255,0.12)", color: "#ff6b6b" }}
+          >
+            <Flag size={18} /> Report this loop
+          </button>
         </div>
       </div>
+      {showReport && <ReportModal targetType="post" targetId={post.id} onClose={() => setShowReport(false)} />}
     </div>
   );
 }

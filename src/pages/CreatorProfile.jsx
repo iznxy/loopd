@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, MessageCircle, Ban, Flag, MoreHorizontal } from "lucide-react";
+import { ChevronLeft, MessageCircle, Ban, Flag, MoreHorizontal, BellOff } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { fmtN, getAvColor, getInitials } from "@/lib/utils";
 import TipModal from "@/components/TipModal";
@@ -26,6 +26,7 @@ export default function CreatorProfile() {
   const [following, setFollowing] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showTip, setShowTip] = useState(false);
@@ -47,18 +48,20 @@ export default function CreatorProfile() {
       }
       if (!found) { setLoading(false); return; }
       setCreator(found);
-      const [creatorPosts, followerList, followingList, myFollow, myBlock] = await Promise.all([
+      const [creatorPosts, followerList, followingList, myFollow, myBlock, myMute] = await Promise.all([
         base44.entities.Post.filter({ user_id: found.id, is_draft: false, visibility: "public" }, "-created_date", 30),
         base44.entities.Follow.filter({ following_id: found.id }),
         base44.entities.Follow.filter({ follower_id: found.id }),
         base44.entities.Follow.filter({ follower_id: me.id, following_id: found.id }),
         base44.entities.Block.filter({ blocker_id: me.id, blocked_id: found.id }),
+        base44.entities.Mute.filter({ muter_id: me.id, muted_id: found.id }),
       ]);
       setPosts(creatorPosts);
       setFollowers(followerList.length);
       setFollowing(followingList.length);
       setIsFollowing(myFollow.length > 0);
       setIsBlocked(myBlock.length > 0);
+      setIsMuted(myMute.length > 0);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [username]);
@@ -107,6 +110,19 @@ export default function CreatorProfile() {
     }
   }
 
+  async function toggleMute() {
+    if (!currentUser || !creator) return;
+    setShowMenu(false);
+    if (isMuted) {
+      const mutes = await base44.entities.Mute.filter({ muter_id: currentUser.id, muted_id: creator.id });
+      if (mutes.length > 0) await base44.entities.Mute.delete(mutes[0].id);
+      setIsMuted(false);
+    } else {
+      await base44.entities.Mute.create({ muter_id: currentUser.id, muted_id: creator.id });
+      setIsMuted(true);
+    }
+  }
+
   function startChat() {
     if (!currentUser || !creator) return;
     const ids = [currentUser.id, creator.id].sort();
@@ -139,6 +155,13 @@ export default function CreatorProfile() {
               style={{ color: "#f5f7f5" }}
             >
               <Ban size={14} /> {isBlocked ? "Unblock" : "Block"}
+            </button>
+            <button
+              onClick={toggleMute}
+              className="flex items-center gap-2 w-full px-4 py-3 text-sm text-left active:bg-white/5"
+              style={{ color: "#f5f7f5", borderTop: "1px solid rgba(255,255,255,0.06)" }}
+            >
+              <BellOff size={14} /> {isMuted ? "Unmute" : "Mute posts"}
             </button>
             <button
               onClick={() => { setShowMenu(false); setShowReport(true); }}
