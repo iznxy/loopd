@@ -3,47 +3,19 @@
   "type": "object",
   "properties": {
     "conversation_id": {
-      "type": "string",
-      "rls": {
-        "update": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "type": "string"
     },
     "sender_id": {
-      "type": "string",
-      "rls": {
-        "update": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "type": "string"
     },
     "sender_username": {
       "type": "string"
     },
     "receiver_id": {
-      "type": "string",
-      "rls": {
-        "update": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "type": "string"
     },
     "text": {
-      "type": "string",
-      "rls": {
-        "update": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "type": "string"
     },
     "audio_url": {
       "type": "string"
@@ -82,16 +54,9 @@
       ]
     },
     "update": {
-      "$or": [
-        {
-          "data.receiver_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     },
     "delete": {
       "$or": [
