@@ -26,11 +26,13 @@ const BG_MAP = {
 const ACID = "#00ff88";
 let currentPlayingVideo = null;
 
-function PostCard({ post, currentUser, onSaveChange, index, total }) {
+function PostCard({ post, currentUser, onSaveChange, index, total, likeId, saveId }) {
   const navigate = useNavigate();
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(!!likeId);
+  const [likeRecId, setLikeRecId] = useState(likeId || null);
   const [likesCount, setLikesCount] = useState(post.likes_count || 0);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(!!saveId);
+  const [saveRecId, setSaveRecId] = useState(saveId || null);
   const [showHeart, setShowHeart] = useState(false);
   const [muted, setMuted] = useState(true);
   const [showComments, setShowComments] = useState(false);
@@ -38,17 +40,6 @@ function PostCard({ post, currentUser, onSaveChange, index, total }) {
   const [videoError, setVideoError] = useState(false);
   const videoRef = useRef(null);
   const clickTimer = useRef(null);
-
-  useEffect(() => {
-    if (!currentUser) return;
-    Promise.all([
-      base44.entities.Like.filter({ post_id: post.id, user_id: currentUser.id }),
-      base44.entities.SavedLoop.filter({ post_id: post.id, user_id: currentUser.id }),
-    ]).then(([likes, saves]) => {
-      setLiked(likes.length > 0);
-      setSaved(saves.length > 0);
-    }).catch(() => {});
-  }, [post.id, currentUser]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -76,14 +67,17 @@ function PostCard({ post, currentUser, onSaveChange, index, total }) {
     if (liked) {
       setLiked(false);
       setLikesCount(c => Math.max(0, c - 1));
-      const likes = await base44.entities.Like.filter({ post_id: post.id, user_id: currentUser.id });
-      if (likes.length > 0) await base44.entities.Like.delete(likes[0].id);
+      if (likeRecId) {
+        setLikeRecId(null);
+        base44.entities.Like.delete(likeRecId).catch(() => {});
+      }
       base44.entities.Post.update(post.id, { likes_count: Math.max(0, (post.likes_count || 0) - 1) }).catch(() => {});
     } else {
       setLiked(true);
       setLikesCount(c => c + 1);
       haptic("success");
-      await base44.entities.Like.create({ post_id: post.id, user_id: currentUser.id, username: currentUser.email?.split("@")[0] });
+      const rec = await base44.entities.Like.create({ post_id: post.id, user_id: currentUser.id, username: currentUser.email?.split("@")[0] });
+      setLikeRecId(rec?.id || null);
       base44.entities.Post.update(post.id, { likes_count: (post.likes_count || 0) + 1 }).catch(() => {});
       if (post.user_id && post.user_id !== currentUser.id) {
         base44.entities.Notification.create({
@@ -102,11 +96,14 @@ function PostCard({ post, currentUser, onSaveChange, index, total }) {
     haptic("medium");
     if (saved) {
       setSaved(false);
-      const saves = await base44.entities.SavedLoop.filter({ post_id: post.id, user_id: currentUser.id });
-      if (saves.length > 0) await base44.entities.SavedLoop.delete(saves[0].id);
+      if (saveRecId) {
+        setSaveRecId(null);
+        base44.entities.SavedLoop.delete(saveRecId).catch(() => {});
+      }
     } else {
       setSaved(true);
-      await base44.entities.SavedLoop.create({ post_id: post.id, user_id: currentUser.id });
+      const rec = await base44.entities.SavedLoop.create({ post_id: post.id, user_id: currentUser.id });
+      setSaveRecId(rec?.id || null);
     }
     onSaveChange?.();
   }
@@ -300,6 +297,8 @@ export default function Home() {
   const [nextCursor, setNextCursor] = useState(null);
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [likedMap, setLikedMap] = useState({});
+  const [savedMap, setSavedMap] = useState({});
   const feedRef = useRef(null);
   const sentinelRef = useRef(null);
   const pullStartY = useRef(null);
@@ -337,8 +336,15 @@ export default function Home() {
         sort = "-likes_count";
       }
 
-      const res = await base44.entities.Post.filter(query, { sort, limit: 20, cursor: append ? nextCursor : undefined });
+      // Likes/saves for the whole page are fetched in one go (not two queries per card)
+      const [res, myLikes, mySaves] = await Promise.all([
+        base44.entities.Post.filter(query, { sort, limit: 20, cursor: append ? nextCursor : undefined }),
+        append ? null : base44.entities.Like.filter({ user_id: currentUser.id }, "-created_date", 200),
+        append ? null : base44.entities.SavedLoop.filter({ user_id: currentUser.id }, "-created_date", 200),
+      ]);
       const items = (Array.isArray(res) ? res : (res.items || [])).filter(p => !excluded.has(p.user_id));
+      if (myLikes) setLikedMap(Object.fromEntries(myLikes.map(l => [l.post_id, l.id])));
+      if (mySaves) setSavedMap(Object.fromEntries(mySaves.map(s => [s.post_id, s.id])));
       setPosts(prev => append ? [...prev, ...items] : items);
       setNextCursor(Array.isArray(res) ? null : (res.next_cursor || null));
       setHasMore(Array.isArray(res) ? false : !!res.has_more);
@@ -529,6 +535,8 @@ export default function Home() {
                   currentUser={currentUser}
                   index={i}
                   total={displayPosts.length}
+                  likeId={likedMap[post.id]}
+                  saveId={savedMap[post.id]}
                 />
               ))}
               {hasMore && (

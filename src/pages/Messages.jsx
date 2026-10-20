@@ -16,6 +16,7 @@ export default function Messages() {
   const [showNewMsg, setShowNewMsg] = useState(false);
   const [userSearch, setUserSearch] = useState("");
   const [blockedIds, setBlockedIds] = useState(new Set());
+  const [readIds, setReadIds] = useState(new Set());
 
   useEffect(() => {
     base44.auth.me().then(async user => {
@@ -39,6 +40,12 @@ export default function Messages() {
           convMap[cid] = { ...msg, lastMsg: msg };
         }
       });
+      // Read receipts are stored separately from the message itself
+      const convIds = Object.keys(convMap);
+      const reads = convIds.length
+        ? await base44.entities.MessageRead.filter({ user_id: user.id, conversation_id: { $in: convIds } })
+        : [];
+      setReadIds(new Set(reads.map(r => r.message_id)));
       setConversations(Object.values(convMap).sort((a, b) => new Date(b.created_date) - new Date(a.created_date)));
       setLoading(false);
     }).catch(() => setLoading(false));
@@ -93,7 +100,7 @@ export default function Messages() {
             const other = getOtherUser(conv);
             const name = other?.full_name || other?.email?.split("@")[0] || conv.sender_username || "User";
             const avColor = getAvColor(name);
-            const isUnread = conv.receiver_id === currentUser?.id && !conv.is_read;
+            const isUnread = conv.receiver_id === currentUser?.id && !conv.is_read && !readIds.has(conv.id);
             return (
               <div
                 key={conv.conversation_id}

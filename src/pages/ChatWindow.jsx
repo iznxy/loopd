@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Send, Mic, MicOff, Video, Smile, Image } from "lucide-react";
+import { ChevronLeft, Send, Mic, MicOff, Video, Smile } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
-import { getAvColor, getInitials, timeAgo } from "@/lib/utils";
+import { getAvColor, getInitials } from "@/lib/utils";
 import GifPicker from "@/components/chat/GifPicker";
 import EmojiPicker from "@/components/chat/EmojiPicker";
 import VoiceMessage from "@/components/chat/VoiceMessage";
@@ -36,13 +36,20 @@ export default function ChatWindow() {
       const other = allUsers.find(u => u.id === otherId);
       setOtherUser(other);
 
-      const msgs = await base44.entities.Message.filter({ conversation_id: conversationId }, "created_date", 100);
+      const [msgs, reads] = await Promise.all([
+        base44.entities.Message.filter({ conversation_id: conversationId }, "created_date", 100),
+        base44.entities.MessageRead.filter({ conversation_id: conversationId, user_id: user.id }),
+      ]);
       setMessages(msgs);
 
-      // Mark received as read
-      msgs.filter(m => m.receiver_id === user.id && !m.is_read).forEach(m =>
-        base44.entities.Message.update(m.id, { is_read: true }).catch(() => {})
-      );
+      // Read receipts live in MessageRead (owned by the reader), one bulk write per conversation.
+      const alreadyRead = new Set(reads.map(r => r.message_id));
+      const unread = msgs.filter(m => m.receiver_id === user.id && !m.is_read && !alreadyRead.has(m.id));
+      if (unread.length > 0) {
+        await base44.entities.MessageRead.bulkCreate(
+          unread.map(m => ({ message_id: m.id, conversation_id: conversationId, user_id: user.id }))
+        ).catch(() => {});
+      }
       setLoading(false);
     }).catch(() => setLoading(false));
 

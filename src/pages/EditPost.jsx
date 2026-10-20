@@ -19,6 +19,7 @@ export default function EditPost() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [needsReview, setNeedsReview] = useState(false);
 
   useEffect(() => {
     if (!postId) { navigate(-1); return; }
@@ -27,7 +28,10 @@ export default function EditPost() {
       setPost(p);
       setCaption(p.caption || "");
       setTags(p.tags || "");
-      setVisibility(p.visibility || "public");
+      // Never silently default a legacy/empty visibility to public — ask the owner to choose.
+      const known = ["public", "private"];
+      setVisibility(known.includes(p.visibility) ? p.visibility : null);
+      setNeedsReview(!known.includes(p.visibility));
       setAllowComments(p.allow_comments !== false);
       setAllowDownloads(p.allow_downloads !== false);
       setLoading(false);
@@ -65,7 +69,7 @@ export default function EditPost() {
         <span className="text-base font-bold text-foreground">Edit Loop</span>
         <button
           onClick={save}
-          disabled={saving}
+          disabled={saving || needsReview}
           className="flex items-center gap-1.5 px-4 py-2 rounded-full text-white text-sm font-bold"
           style={{ background: accentColor }}
         >
@@ -106,6 +110,12 @@ export default function EditPost() {
 
         {/* Visibility */}
         <div>
+          {needsReview && (
+            <div className="mb-3 px-3 py-2.5 rounded-xl text-xs leading-relaxed"
+              style={{ border: "1px solid rgba(255,176,32,0.45)", background: "rgba(255,176,32,0.08)", color: "#ffb020" }}>
+              This loop has no visibility set, so only you can see it. Pick who can see it to publish it.
+            </div>
+          )}
           <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide block mb-2">Who can see this?</label>
           <div className="flex gap-2">
             {[

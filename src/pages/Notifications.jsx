@@ -20,16 +20,22 @@ export default function Notifications() {
   const [notifs, setNotifs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    base44.auth.me().then(user => {
-      base44.entities.Notification.filter({ user_id: user.id }, "-created_date", 50)
-        .then(data => {
-          setNotifs(data);
-          setLoading(false);
-        })
-        .catch(() => setLoading(false));
-    }).catch(() => setLoading(false));
-  }, []);
+  async function load() {
+    try {
+      const user = await base44.auth.me();
+      const mutes = await base44.entities.Mute.filter({ muter_id: user.id });
+      // Muting an account suppresses every notification that account generates.
+      // An empty $nin excludes nobody, so other users' notifications always come through.
+      const data = await base44.entities.Notification.filter(
+        { user_id: user.id, from_user_id: { $nin: mutes.map(m => m.muted_id) } },
+        "-created_date", 50
+      );
+      setNotifs(data);
+    } catch {}
+    setLoading(false);
+  }
+
+  useEffect(() => { load(); }, []);
 
   async function handleNotifClick(n) {
     if (!n.is_read) {

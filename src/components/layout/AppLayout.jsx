@@ -15,12 +15,22 @@ export default function AppLayout() {
   const [unreadNotifs, setUnreadNotifs] = useState(0);
 
   useEffect(() => {
-    base44.auth.me().then(user => {
-      if (!user) return;
-      base44.entities.Notification.filter({ user_id: user.id, is_read: false }, "-created_date", 50)
-        .then(items => setUnreadNotifs(items.length))
-        .catch(() => {});
-    }).catch(() => {});
+    let active = true;
+    (async () => {
+      try {
+        const user = await base44.auth.me();
+        if (!user || !active) return;
+        const mutes = await base44.entities.Mute.filter({ muter_id: user.id });
+        // Badge mirrors the notifications feed: muted accounts are not counted.
+        const total = await base44.entities.Notification.count({
+          user_id: user.id,
+          is_read: false,
+          from_user_id: { $nin: mutes.map(m => m.muted_id) },
+        });
+        if (active) setUnreadNotifs(total);
+      } catch {}
+    })();
+    return () => { active = false; };
   }, [location.pathname]);
 
   const tabs = [
