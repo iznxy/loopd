@@ -48,8 +48,10 @@ export default function CommentsPanel({ post, onClose, currentUser }) {
         text: msg,
       });
       setComments(prev => [...prev, newComment]);
-      // Only the post owner may update the counter (RLS) — ignore if not permitted
-      base44.entities.Post.update(post.id, { comments_count: (post.comments_count || 0) + 1 }).catch(() => {});
+      // The Post write rule is owner-only, so only fire the counter write where it can land.
+      if (currentUser.id === post.created_by_id) {
+        base44.entities.Post.update(post.id, { comments_count: (post.comments_count || 0) + 1 }).catch(() => {});
+      }
     } catch {
       setText(msg);
     }
@@ -60,7 +62,9 @@ export default function CommentsPanel({ post, onClose, currentUser }) {
     try {
       await base44.entities.Comment.delete(c.id);
       setComments(prev => prev.filter(x => x.id !== c.id));
-      base44.entities.Post.update(post.id, { comments_count: Math.max(0, (post.comments_count || 1) - 1) }).catch(() => {});
+      if (currentUser?.id === post.created_by_id) {
+        base44.entities.Post.update(post.id, { comments_count: Math.max(0, (post.comments_count || 1) - 1) }).catch(() => {});
+      }
     } catch {}
   }
 

@@ -34,9 +34,10 @@ export default function Earn() {
         <div className="rounded-2xl p-4 border border-amber-500/40 bg-amber-500/10">
           <div className="text-sm font-bold text-amber-500 mb-1">Monetization isn't available yet</div>
           <p className="text-xs text-amber-500/90 leading-relaxed">
-            The tips below are in-app records only. No payment is processed, so they are not verified
-            revenue and cannot be withdrawn. Withdrawals stay disabled until a payment can be confirmed
-            on the server.
+            New tips can't be sent while payments aren't supported. Any tips below are in-app records
+            from before tipping was paused — no payment was processed, so they are not verified revenue
+            and cannot be withdrawn. Withdrawals stay disabled until a payment can be confirmed on the
+            server.
           </p>
         </div>
 

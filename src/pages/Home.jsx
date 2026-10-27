@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, Share2, Bookmark, Music2, Volume2, VolumeX, Download } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { useTheme } from "@/lib/ThemeContext";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { fmtN } from "@/lib/utils";
 import CommentsPanel from "@/components/CommentsPanel";
@@ -61,6 +60,11 @@ function PostCard({ post, currentUser, onSaveChange, index, total, likeId, saveI
     return () => observer.disconnect();
   }, []);
 
+  // The Post write rule is owner-only, so a likes_count write on someone else's loop is always
+  // refused. Only fire it where the architecture actually permits it; the number on screen still
+  // updates optimistically for this session. See docs: like counts are not server-derived yet.
+  const canWriteCount = !!currentUser && post.created_by_id === currentUser.id;
+
   async function handleLike() {
     if (!currentUser) return;
     haptic("light");
@@ -71,14 +75,14 @@ function PostCard({ post, currentUser, onSaveChange, index, total, likeId, saveI
         setLikeRecId(null);
         base44.entities.Like.delete(likeRecId).catch(() => {});
       }
-      base44.entities.Post.update(post.id, { likes_count: Math.max(0, (post.likes_count || 0) - 1) }).catch(() => {});
+      if (canWriteCount) base44.entities.Post.update(post.id, { likes_count: Math.max(0, (post.likes_count || 0) - 1) }).catch(() => {});
     } else {
       setLiked(true);
       setLikesCount(c => c + 1);
       haptic("success");
       const rec = await base44.entities.Like.create({ post_id: post.id, user_id: currentUser.id, username: currentUser.email?.split("@")[0] });
       setLikeRecId(rec?.id || null);
-      base44.entities.Post.update(post.id, { likes_count: (post.likes_count || 0) + 1 }).catch(() => {});
+      if (canWriteCount) base44.entities.Post.update(post.id, { likes_count: (post.likes_count || 0) + 1 }).catch(() => {});
       if (post.user_id && post.user_id !== currentUser.id) {
         base44.entities.Notification.create({
           user_id: post.user_id,
@@ -283,7 +287,6 @@ function PostCard({ post, currentUser, onSaveChange, index, total, likeId, saveI
 }
 
 export default function Home() {
-  const { accentColor } = useTheme();
   const { t } = useLanguage();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -292,7 +295,6 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [tab, setTab] = useState("foryou");
-  const [followingIds, setFollowingIds] = useState(new Set());
   const [blockedIds, setBlockedIds] = useState(new Set());
   const [nextCursor, setNextCursor] = useState(null);
   const [hasMore, setHasMore] = useState(false);
@@ -323,7 +325,6 @@ export default function Home() {
       if (tab === "following") {
         const follows = await base44.entities.Follow.filter({ follower_id: currentUser.id });
         const ids = follows.map(f => f.following_id);
-        setFollowingIds(new Set(ids));
         if (ids.length === 0) {
           setPosts([]); setHasMore(false); setNextCursor(null);
           if (!silent) setLoading(false);

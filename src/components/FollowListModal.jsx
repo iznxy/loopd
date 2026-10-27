@@ -17,16 +17,17 @@ export default function FollowListModal({ userId, type, onClose }) {
   useEffect(() => {
     base44.auth.me().then(async me => {
       setCurrentUser(me);
-      const [follows, myF, allUsers] = await Promise.all([
+      const [follows, myF] = await Promise.all([
         type === "followers"
           ? base44.entities.Follow.filter({ following_id: userId })
           : base44.entities.Follow.filter({ follower_id: userId }),
         base44.entities.Follow.filter({ follower_id: me.id }),
-        base44.entities.User.list("full_name", 100),
       ]);
       setList(follows);
       setMyFollowing(myF.map(f => f.following_id));
-      setUsers(allUsers);
+      // Fetch only the accounts that appear on this list — never the whole directory.
+      const ids = [...new Set(follows.map(f => (type === "followers" ? f.follower_id : f.following_id)))];
+      setUsers(ids.length ? await base44.entities.User.filter({ id: { $in: ids } }) : []);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [userId, type]);
