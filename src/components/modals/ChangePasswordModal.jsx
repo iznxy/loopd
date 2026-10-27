@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
-import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 
 export default function ChangePasswordModal({ onClose }) {

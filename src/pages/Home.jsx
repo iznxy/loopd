@@ -39,6 +39,8 @@ function PostCard({ post, currentUser, onSaveChange, index, total, likeId, saveI
   const [videoError, setVideoError] = useState(false);
   const videoRef = useRef(null);
   const clickTimer = useRef(null);
+  const likePending = useRef(false);
+  const savePending = useRef(false);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -66,8 +68,10 @@ function PostCard({ post, currentUser, onSaveChange, index, total, likeId, saveI
   const canWriteCount = !!currentUser && post.created_by_id === currentUser.id;
 
   async function handleLike() {
-    if (!currentUser) return;
+    if (!currentUser || likePending.current) return;
+    likePending.current = true;
     haptic("light");
+    try {
     if (liked) {
       setLiked(false);
       setLikesCount(c => Math.max(0, c - 1));
@@ -93,11 +97,17 @@ function PostCard({ post, currentUser, onSaveChange, index, total, likeId, saveI
         }).catch(() => {});
       }
     }
+    } finally {
+      // Release on the next tick so a fast double-tap can't insert two Like rows.
+      setTimeout(() => { likePending.current = false; }, 400);
+    }
   }
 
   async function handleSave() {
-    if (!currentUser) return;
+    if (!currentUser || savePending.current) return;
+    savePending.current = true;
     haptic("medium");
+    try {
     if (saved) {
       setSaved(false);
       if (saveRecId) {
@@ -108,6 +118,9 @@ function PostCard({ post, currentUser, onSaveChange, index, total, likeId, saveI
       setSaved(true);
       const rec = await base44.entities.SavedLoop.create({ post_id: post.id, user_id: currentUser.id });
       setSaveRecId(rec?.id || null);
+    }
+    } finally {
+      setTimeout(() => { savePending.current = false; }, 400);
     }
     onSaveChange?.();
   }
@@ -304,21 +317,28 @@ export default function Home() {
   const feedRef = useRef(null);
   const sentinelRef = useRef(null);
   const pullStartY = useRef(null);
+  const feedReqId = useRef(0);
   const [pullDistance, setPullDistance] = useState(0);
 
   async function loadFeed(silent = false, append = false) {
     if (!currentUser) return;
+    const reqId = ++feedReqId.current;
     if (!silent && !append) setLoading(true);
     try {
-      const [blocks, mutes] = await Promise.all([
-        base44.entities.Block.filter({ blocker_id: currentUser.id }),
-        base44.entities.Mute.filter({ muter_id: currentUser.id }),
-      ]);
-      const excluded = new Set([
-        ...blocks.map(b => b.blocked_id),
-        ...mutes.map(m => m.muted_id),
-      ]);
-      setBlockedIds(excluded);
+      // Reuse the already-loaded block/mute set when appending another page — refetching it on
+      // every scroll page tripled the per-page request count for no benefit.
+      let excluded = blockedIds;
+      if (!append) {
+        const [blocks, mutes] = await Promise.all([
+          base44.entities.Block.filter({ blocker_id: currentUser.id }),
+          base44.entities.Mute.filter({ muter_id: currentUser.id }),
+        ]);
+        excluded = new Set([
+          ...blocks.map(b => b.blocked_id),
+          ...mutes.map(m => m.muted_id),
+        ]);
+        setBlockedIds(excluded);
+      }
 
       let query = { is_draft: false, visibility: "public" };
       let sort = "-created_date";
@@ -343,6 +363,8 @@ export default function Home() {
         append ? null : base44.entities.Like.filter({ user_id: currentUser.id }, "-created_date", 200),
         append ? null : base44.entities.SavedLoop.filter({ user_id: currentUser.id }, "-created_date", 200),
       ]);
+      // A newer load (tab switch, refresh) supersedes this one — never overwrite fresher state.
+      if (reqId !== feedReqId.current) return;
       const items = (Array.isArray(res) ? res : (res.items || [])).filter(p => !excluded.has(p.user_id));
       if (myLikes) setLikedMap(Object.fromEntries(myLikes.map(l => [l.post_id, l.id])));
       if (mySaves) setSavedMap(Object.fromEntries(mySaves.map(s => [s.post_id, s.id])));

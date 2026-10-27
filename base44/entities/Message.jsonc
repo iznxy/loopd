@@ -18,7 +18,12 @@
       "type": "string"
     },
     "audio_url": {
-      "type": "string"
+      "type": "string",
+      "description": "Legacy: stored signed URL. Expires; new voice notes use audio_file_uri instead."
+    },
+    "audio_file_uri": {
+      "type": "string",
+      "description": "Private file reference for voice notes. Signed on read, never stored as a URL."
     },
     "message_type": {
       "type": "string",

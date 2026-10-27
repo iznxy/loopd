@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Lock, Shield, Eye, Download, Music, Ban, KeyRound, Smartphone, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Shield, Eye, Download, Music, Ban, KeyRound, Smartphone, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 import ChangePasswordModal from "@/components/modals/ChangePasswordModal";

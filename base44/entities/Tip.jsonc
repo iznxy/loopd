@@ -28,7 +28,9 @@
   ],
   "rls": {
     "create": {
-      "data.from_user_id": "{{user.id}}"
+      "user_condition": {
+        "role": "admin"
+      }
     },
     "read": {
       "$or": [

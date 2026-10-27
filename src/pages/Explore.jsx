@@ -140,7 +140,9 @@ export default function Explore() {
   const filteredUsers = (query
     ? users.filter(u =>
         u.full_name?.toLowerCase().includes(query.toLowerCase()) ||
-        u.email?.toLowerCase().includes(query.toLowerCase())
+        // Match the public handle only — never the full email, which would turn discovery into
+        // an address-confirmation tool.
+        (u.email?.split("@")[0] || "").toLowerCase().includes(query.toLowerCase())
       )
     : users
   ).filter(u => !excludedIds.has(u.id));

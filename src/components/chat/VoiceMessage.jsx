@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Play, Pause } from "lucide-react";
+import { base44 } from "@/api/base44Client";
 
-export default function VoiceMessage({ audioUrl, isMe, accentColor }) {
+export default function VoiceMessage({ audioUrl, fileUri, isMe, accentColor }) {
+  const [resolvedUrl, setResolvedUrl] = useState(audioUrl || null);
   const [playing, setPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -22,6 +24,17 @@ export default function VoiceMessage({ audioUrl, isMe, accentColor }) {
       audio.removeEventListener("ended", onEnd);
     };
   }, []);
+
+  // Voice notes are stored as a private file reference. A short-lived signed URL is minted per
+  // view, so the playable link is never persisted inside the message record.
+  useEffect(() => {
+    if (!fileUri) return;
+    let active = true;
+    base44.integrations.Core.CreateFileSignedUrl({ file_uri: fileUri, expires_in: 3600 })
+      .then(res => { if (active && res?.signed_url) setResolvedUrl(res.signed_url); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [fileUri]);
 
   function toggle() {
     const audio = audioRef.current;
@@ -53,7 +66,7 @@ export default function VoiceMessage({ audioUrl, isMe, accentColor }) {
         borderBottomLeftRadius: !isMe ? 4 : undefined,
       }}
     >
-      <audio ref={audioRef} src={audioUrl} preload="metadata" />
+      <audio ref={audioRef} src={resolvedUrl || undefined} preload="metadata" />
       <button
         onClick={toggle}
         className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { ChevronRight, Globe, User, Calendar, Check } from "lucide-react";
+import { ChevronRight, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useTheme } from "@/lib/ThemeContext";
 import { useLanguage } from "@/lib/i18n/LanguageContext";

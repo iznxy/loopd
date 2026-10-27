@@ -23,6 +23,7 @@ export default function ChatWindow() {
   const [recording, setRecording] = useState(false);
   const [inCall, setInCall] = useState(false);
   const [iBlockedThem, setIBlockedThem] = useState(false);
+  const [sending, setSending] = useState(false);
 
   const bottomRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -74,7 +75,7 @@ export default function ChatWindow() {
   }, [messages]);
 
   async function sendMessage(override = {}) {
-    if (!currentUser || !otherUser || iBlockedThem) return;
+    if (!currentUser || !otherUser || iBlockedThem || sending) return;
     const payload = {
       conversation_id: conversationId,
       sender_id: currentUser.id,
@@ -83,11 +84,21 @@ export default function ChatWindow() {
       text: override.text ?? text,
       message_type: override.message_type ?? "text",
       audio_url: override.audio_url ?? undefined,
+      audio_file_uri: override.audio_file_uri ?? undefined,
       is_read: false,
     };
-    if (!payload.text && !payload.audio_url) return;
+    if (!payload.text && !payload.audio_url && !payload.audio_file_uri) return;
+    const typed = text;
     setText("");
-    await base44.entities.Message.create(payload);
+    setSending(true);
+    try {
+      await base44.entities.Message.create(payload);
+    } catch {
+      // A failed send must not swallow what the user typed.
+      if (!override.text) setText(typed);
+    } finally {
+      setSending(false);
+    }
   }
 
   async function startRecording() {
@@ -100,9 +111,10 @@ export default function ChatWindow() {
       stream.getTracks().forEach(t => t.stop());
       const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
       const file = new File([blob], "voice.webm", { type: "audio/webm" });
+      // Store the private file reference, never a signed URL: signed URLs expire within minutes,
+      // which would leave a dead link baked into the message record forever.
       const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
-      const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({ file_uri });
-      await sendMessage({ text: "", message_type: "voice", audio_url: signed_url });
+      await sendMessage({ text: "", message_type: "voice", audio_file_uri: file_uri });
     };
     recorder.start();
     setRecording(true);
@@ -172,8 +184,8 @@ export default function ChatWindow() {
           const isMe = msg.sender_id === currentUser?.id;
           return (
             <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-              {msg.message_type === "voice" && msg.audio_url ? (
-                <VoiceMessage audioUrl={msg.audio_url} isMe={isMe} accentColor={accentColor} />
+              {msg.message_type === "voice" && (msg.audio_file_uri || msg.audio_url) ? (
+                <VoiceMessage audioUrl={msg.audio_url} fileUri={msg.audio_file_uri} isMe={isMe} accentColor={accentColor} />
               ) : msg.message_type === "gif" && msg.text ? (
                 <img
                   src={msg.text}

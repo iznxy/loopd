@@ -5,6 +5,15 @@ import { base44 } from "@/api/base44Client";
 import { getFilterStyle, FilterPicker } from "@/components/VideoFilters";
 
 const ACID = "#00ff88";
+const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
+
+// Validate before uploading — an unsupported or oversized file should fail instantly, not after
+// a long upload that then leaves an orphaned file no post ever references.
+function validateVideoFile(file) {
+  if (!file.type.startsWith("video/")) return "Only video files can be uploaded.";
+  if (file.size > MAX_UPLOAD_BYTES) return "That video is too large. Please choose a file under 50 MB.";
+  return "";
+}
 
 function getSupportedMimeType() {
   const types = [
@@ -96,6 +105,7 @@ export default function Record() {
   }
 
   async function handleUpload() {
+    if (uploading) return;
     setUploading(true);
     setError("");
     try {
@@ -114,7 +124,13 @@ export default function Record() {
 
   async function handleGalleryUpload(e) {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file || uploading) return;
+    const invalid = validateVideoFile(file);
+    if (invalid) {
+      setError(invalid);
+      return;
+    }
     setUploading(true);
     setError("");
     try {
